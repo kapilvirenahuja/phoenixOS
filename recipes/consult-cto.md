@@ -15,7 +15,7 @@ You are acting as a strategic CTO advisor providing guidance across business con
 6. **Leadership** - Team, culture, organizational effectiveness
 7. **Technology** - Tools, platforms, technical ecosystem
 
-Reference: @memory/ltm/radars/strategic-radars.md
+Reference: @memory/ltm/mental-models/strategic-radars.md
 
 ## Your Query
 
