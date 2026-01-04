@@ -2,6 +2,50 @@
 
 > Intent patterns for CTO-level strategic and technical guidance
 
+---
+
+## Architecture: Separation of Concerns
+
+```
+User Query
+    │
+    ├─────────────────────┬─────────────────────┐
+    │                     │                     │
+    ▼                     ▼                     │
+RADAR SCANNING       INTENT DETECTION           │
+(Step 0)             (Step 1)                   │
+    │                     │                     │
+    ▼                     ▼                     │
+STM context.md       Routing Plan               │
+(signals loaded)     (intents identified)       │
+    │                     │                     │
+    └─────────────────────┴─────────────────────┘
+                          │
+                          ▼
+                    AGENTS EXECUTE
+                    (Read from STM + serve intent)
+```
+
+### Two Independent Processes
+
+| Process | Location | Purpose | References |
+|---------|----------|---------|------------|
+| **Radar Scanning** | `initialize-stm` skill | Load relevant signals into STM | `{user-vault}/radars/` |
+| **Intent Detection** | `orchestrator` agent | Identify what user wants | This file |
+
+**These processes are independent.** Intents do NOT reference radars or signals. Radars do NOT reference intents.
+
+### What Each Provides
+
+| Component | Provides |
+|-----------|----------|
+| **Intents** (this file) | Detection patterns + question framing structure (the SHAPE) |
+| **Radars** | Keywords for matching + signal mappings |
+| **Signals** | Actual knowledge content (the CONTENT) |
+| **STM** | Pre-filtered signals for this session |
+
+---
+
 ## Intent: clarify
 
 ### Patterns
@@ -15,19 +59,22 @@
 - Multiple interpretations possible
 - Key decision factors unknown
 - User seems uncertain
+- No radar matches (triggers clarify automatically)
 
 ### Routes To
 Agent: `phoenix:strategy-guardian`
-Skills: `consult:clarify-requirements`
 
-### Context Enrichment
-- **user_needs**: Help articulating what they actually want
-- **expects**: Focused questions that unblock decision-making
-- **probe_for**:
-  - "AI-powered" → What problem does AI solve?
-  - "Scalable" → What's your target user count?
-  - "Fast" → What latency is acceptable?
-  - "Modern" → What feels outdated today?
+### Framing Structure
+
+**Goal**: Resolve ambiguity before proceeding
+
+**Question shapes**:
+- "What specifically...?" — narrow scope
+- "Who/what/when/where...?" — fill gaps
+- "What does [term] mean to you?" — define terms
+- "What would success look like?" — clarify outcomes
+
+**Success criteria**: User provides concrete specifics that enable next intent
 
 ### Related Intents
 - **evolves_to**: `design`, `validate`, `decide`, `consult`, or `advise` (once clarified)
@@ -55,12 +102,18 @@ Skills: `consult:clarify-requirements`
 
 ### Routes To
 Agent: `phoenix:strategy-guardian`
-Skills: `consult:analyze-request`, `validate:challenge-assumptions`
 
-### Context Enrichment
-- **user_needs**: Clear recommendation with rationale
-- **expects**: Decision framework, trade-off analysis, recommendation with confidence level
-- **probe_for**: Decision criteria, constraints, reversibility, timeline, who else is involved
+### Framing Structure
+
+**Goal**: Guide decision between options with clear rationale
+
+**Question shapes**:
+- "What criteria matter most for this decision?" — establish framework
+- "What are the constraints?" — understand boundaries
+- "What happens if you choose wrong?" — assess reversibility
+- "Who else is affected by this decision?" — identify stakeholders
+
+**Success criteria**: User can make informed decision with stated trade-offs
 
 ### Related Intents
 - **evolves_to**: `design` (after decision made)
@@ -89,12 +142,18 @@ Skills: `consult:analyze-request`, `validate:challenge-assumptions`
 
 ### Routes To
 Agent: `phoenix:strategy-guardian`
-Skills: `validate:challenge-assumptions`, `validate:detect-antipatterns`, `validate:generate-report`
 
-### Context Enrichment
-- **user_needs**: Honest assessment of risks and blind spots
-- **expects**: Validation report with verdict (GOOD / NEEDS WORK / BAD), specific concerns, alternatives
-- **probe_for**: Timeline, team size, budget, constraints, success criteria
+### Framing Structure
+
+**Goal**: Identify risks, blind spots, and weaknesses in proposed approach
+
+**Question shapes**:
+- "What assumptions are you making?" — surface hidden assumptions
+- "What could cause this to fail?" — identify risks
+- "What are you NOT doing?" — find gaps
+- "What's your fallback if X doesn't work?" — test resilience
+
+**Success criteria**: User understands risks and has mitigation strategies
 
 ### Related Intents
 - **evolves_to**: `design` (if validation reveals need for redesign)
@@ -122,12 +181,18 @@ Skills: `validate:challenge-assumptions`, `validate:detect-antipatterns`, `valid
 
 ### Routes To
 Agent: `phoenix:strategy-guardian`
-Skills: `consult:analyze-request`, `consult:clarify-requirements`, `consult:synthesize-response`
 
-### Context Enrichment
-- **user_needs**: Practical guidance to unblock progress
-- **expects**: Step-by-step approach, concrete recommendations, actionable next steps
-- **probe_for**: What's been tried, current blockers, constraints, desired outcome
+### Framing Structure
+
+**Goal**: Provide practical guidance to unblock progress
+
+**Question shapes**:
+- "What have you tried so far?" — understand current state
+- "What specifically is blocking you?" — pinpoint the issue
+- "What constraints are you working within?" — understand boundaries
+- "What would 'solved' look like?" — clarify desired outcome
+
+**Success criteria**: User has actionable next steps to make progress
 
 ### Related Intents
 - **evolves_to**: `design` (if problem requires new architecture), `validate` (if solution needs review)
@@ -155,13 +220,19 @@ Skills: `consult:analyze-request`, `consult:clarify-requirements`, `consult:synt
 - Values CTO experience and judgment
 
 ### Routes To
-Agent: `phoenix:advisor` (TBD) or `phoenix:strategy-guardian`
-Skills: `advise:provide-perspective`, `advise:assess-trends`, `advise:strategic-counsel`
+Agent: `phoenix:advisor` or `phoenix:strategy-guardian`
 
-### Context Enrichment
-- **user_needs**: Informed perspective from experienced CTO lens
-- **expects**: Nuanced viewpoint, industry context, strategic considerations
-- **probe_for**: Why asking now, what decision this might inform, specific concerns
+### Framing Structure
+
+**Goal**: Provide informed strategic perspective
+
+**Question shapes**:
+- "Why are you asking this now?" — understand context
+- "What decision might this inform?" — connect to action
+- "What's your current thinking?" — understand baseline
+- "What specifically concerns you?" — focus the advice
+
+**Success criteria**: User has strategic perspective to inform thinking
 
 ### Related Intents
 - **evolves_to**: `decide` (if advice leads to decision), `design` (if advice sparks new initiative)
@@ -196,24 +267,28 @@ Sub-intent classification → then routes to appropriate agent
 **Patterns**: Technical architecture, system design, API design, infrastructure
 **Example**: "Design my API layer", "What database architecture should I use?"
 **Routes To**: Agent `phoenix:architect`
-**Skills**: `architect:analyze-requirements`, `architect:propose-options`, `architect:document-decision`, `architect:identify-risks`
 
 #### ux-design
 **Patterns**: User experience, user flows, interface design, onboarding
 **Example**: "Design the onboarding flow", "How should the user journey work?"
-**Routes To**: Agent `phoenix:ux-architect` (TBD)
-**Skills**: `ux:map-user-journey`, `ux:design-flow`, `ux:validate-experience`
+**Routes To**: Agent `phoenix:ux-architect`
 
 #### strategy-design
 **Patterns**: Business strategy, go-to-market, product strategy, competitive positioning
 **Example**: "Design our go-to-market", "How should we position this product?"
-**Routes To**: Agent `phoenix:strategist` (TBD)
-**Skills**: `strategy:analyze-market`, `strategy:design-gtm`, `strategy:competitive-positioning`
+**Routes To**: Agent `phoenix:strategist`
 
-### Context Enrichment
-- **user_needs**: System design guidance with clear rationale
-- **expects**: Architecture recommendation, trade-offs analysis, implementation roadmap
-- **probe_for**: Scale requirements, constraints, team capabilities, timeline, existing systems
+### Framing Structure
+
+**Goal**: Provide design guidance with clear rationale
+
+**Question shapes**:
+- "What scale are you designing for?" — understand constraints
+- "Who needs to maintain this?" — understand team capabilities
+- "What's already in place?" — understand integration points
+- "What's non-negotiable vs. flexible?" — understand priorities
+
+**Success criteria**: User has actionable design direction with understood trade-offs
 
 ### Related Intents
 - **evolves_to**: `validate` (after design is proposed)
@@ -226,7 +301,7 @@ Sub-intent classification → then routes to appropriate agent
 
 When multiple intents could match, use this priority:
 
-1. **clarify** - Always resolve ambiguity first
+1. **clarify** - Always resolve ambiguity first (also triggered when no radar matches)
 2. **decide** - Decision gates block other work
 3. **validate** - Review before building
 4. **consult** - Address specific problems
@@ -245,5 +320,5 @@ When multiple intents could match, use this priority:
 
 ---
 
-**Version**: 1.1.0
-**Last Updated**: 2026-01-02
+**Version**: 3.0.0
+**Last Updated**: 2026-01-05

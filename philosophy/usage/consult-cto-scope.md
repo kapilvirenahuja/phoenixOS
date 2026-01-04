@@ -6,6 +6,18 @@
 
 The `consult-cto` recipe provides CTO-level strategic and technical guidance. It routes queries through intent classification to specialized agents that leverage domain-specific skills.
 
+---
+
+## ⛔ Critical Execution Requirement
+
+**Step 1 (Initialize Context) is MANDATORY and must complete before any other step.**
+
+This is not optional setup—it creates the STM workspace that all subsequent steps depend on. Do not skip this step to optimize for response speed.
+
+See: `@memory/engine/flows/recipe-orchestration-pattern.md` → "Procedural Execution Requirements"
+
+---
+
 ## Execution Flow
 
 ```
@@ -19,20 +31,21 @@ User Query
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Step 1: Initialize Context                                   │
+│ Step 0: Initialize STM                                       │
 │                                                              │
-│   Skill: context:initialize-stm                              │
+│   Skill: phoenix-context-initialize-stm                      │
 │   - Create STM workspace structure                           │
-│   - Load relevant LTM patterns                               │
+│   - Scan query against radars ({user-vault}/radars/)         │
+│   - Load matched signals into STM context.md                 │
 │   - Capture initial state                                    │
 └─────────────────────────────────────────────────────────────┘
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Step 2: Identify Intent                                      │
+│ Step 1: Build Routing Plan                                   │
 │                                                              │
-│   Skill: context:identify-intent                             │
-│   Memory: @memory/ltm/intents/cto-intents.md                 │
+│   Agent: phoenix:orchestrator                                │
+│   Memory: @memory/engine/intents/cto-intents.md              │
 │                                                              │
 │   Intents (6):                                               │
 │   - clarify  → Resolve ambiguity                             │
@@ -113,7 +126,7 @@ When multiple intents could match:
 6. design     → Create after decisions and validation
 ```
 
-**Reference**: `@memory/ltm/intents/sequencing-rules.md`
+**Reference**: `@memory/engine/intents/sequencing-rules.md`
 
 ---
 
@@ -139,8 +152,9 @@ When multiple intents could match:
 
 | Skill | File | Status |
 |-------|------|--------|
-| `context:initialize-stm` | `skills/context/initialize-stm/SKILL.md` | ✓ Complete |
-| `context:identify-intent` | `skills/context/identify-intent/SKILL.md` | ✓ Complete |
+| `phoenix-context-initialize-stm` | `skills/phoenix-context-initialize-stm/SKILL.md` | ✓ Complete |
+| `phoenix-context-identify-intent` | `skills/phoenix-context-identify-intent/SKILL.md` | ✓ Complete |
+| `phoenix-context-update-stm` | `skills/phoenix-context-update-stm/SKILL.md` | ✓ Complete |
 
 ### Skills - Consult Domain
 
@@ -195,8 +209,8 @@ When multiple intents could match:
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `memory/ltm/intents/cto-intents.md` | ✓ Complete | Intent patterns for classification |
-| `memory/ltm/intents/sequencing-rules.md` | ✓ Complete | Multi-intent ordering rules |
+| `memory/engine/intents/cto-intents.md` | ✓ Complete | Intent patterns for classification |
+| `memory/engine/intents/sequencing-rules.md` | ✓ Complete | Multi-intent ordering rules |
 
 ---
 
@@ -206,7 +220,7 @@ When multiple intents could match:
 |----------|----------|-------|----------|
 | Recipe | 1 | 1 | 100% |
 | Agents | 2 | 5 | 40% |
-| Context Skills | 2 | 2 | 100% |
+| Context Skills | 3 | 3 | 100% |
 | Consult Skills | 0 | 3 | 0% |
 | Validate Skills | 0 | 3 | 0% |
 | Advise Skills | 0 | 3 | 0% |
@@ -214,7 +228,7 @@ When multiple intents could match:
 | UX Skills | 0 | 3 | 0% |
 | Strategy Skills | 0 | 3 | 0% |
 | Memory (intents) | 2 | 2 | 100% |
-| **Total** | **7** | **29** | **24%** |
+| **Total** | **8** | **30** | **27%** |
 
 ---
 
@@ -347,5 +361,5 @@ All outputs follow the CTO voice:
 
 ---
 
-**Version**: 1.1.0
-**Last Updated**: 2026-01-02
+**Version**: 1.2.0
+**Last Updated**: 2026-01-04

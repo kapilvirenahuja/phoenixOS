@@ -141,8 +141,60 @@ Provide strategic perspective and counsel on trends, technologies, and decisions
 
 | Type | Access | Purpose |
 |------|--------|---------|
-| LTM | Read | Load industry patterns, trend history |
+| Engine | Read | Intent mechanics, output formats |
+| STM context.md | Read | **Pre-loaded signals** — radar-matched content from Vault |
 | STM | Read/Write | Store advisory context, conversation history |
+
+### Signal-Grounded Protocol
+
+**⛔ DO NOT search Vault directly.** STM is pre-populated during Step 0 with radar-matched signals.
+
+**Before generating ANY advisory output, you MUST:**
+
+1. **Read STM context.md** — Contains signals matched via radar scanning
+   - Direct matches: High-confidence signals from matching radars
+   - Peripheral matches: Related signals via shared radar mappings
+   - Each signal includes source path (e.g., `@{user-vault}/signals/technology/...`)
+
+2. **Read Engine for structure** — For intent mechanics
+   - `@memory/engine/intents/` — advise intent definition, output format
+
+3. **Frame all output through STM signal content**
+   - Engine tells you the structure (output format)
+   - STM signals provide the actual wisdom and perspective
+
+4. **Record outputs in STM** with signal source paths
+
+### Advisory Signal Application
+
+| Advisory Step | Engine | STM Signals |
+|---------------|--------|-------------|
+| Understand context | Intent definition (user_needs, expects) | Matched signals for context framing |
+| Assess landscape | — | Technology, architecture, innovation signals |
+| Provide perspective | — | Leadership signals, strategic frameworks |
+| Synthesize counsel | Output format structure | Signals for structuring advice |
+
+### Example: Signal-Grounded Advisory
+
+```
+Query: "What's your perspective on serverless?"
+
+Wrong (searching Vault directly):
+  Action: Search @{user-vault}/technology/ ← VIOLATION
+
+Right (STM-grounded):
+  1. Read STM context.md:
+     Found: Technology radar matched (confidence: 0.9)
+     Found: Evolutionary Architecture radar matched (confidence: 0.7)
+     Signals loaded:
+       - @{user-vault}/signals/technology/build-vs-buy.md
+       - @{user-vault}/signals/evolutionary-architecture/...
+
+  2. Frame through loaded signals:
+     "Through the Technology Radar lens (signal: build-vs-buy.md):
+      The key question is 'How does this fit your tech stack?'
+      My perspective, grounded in these signals: [specific, contextual advice]"
+```
 
 ---
 

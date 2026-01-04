@@ -1,17 +1,17 @@
 ---
-name: context-identify-intent
-description: Classify user query into intent(s) using LTM patterns. Use early in Level 2+ recipes (Step 2) and re-invoke when agents need clarity about which intent they're serving. Reads intent patterns from LTM, matches against query, handles multi-intent sequencing, and enriches context for downstream agents.
+name: phoenix-context-identify-intent
+description: Re-evaluate user intent during agent execution. NOT for initial orchestration (use orchestrator skills for that). Invoke when agents detect intent may have shifted mid-execution.
 ---
 
-# Identify Intent
+# Identify Intent (Re-evaluation)
 
-Detect user intent(s) from query and context. Maps raw expression to actionable intent classification that drives routing and enriches agent context.
+Re-evaluate user intent when agents suspect the intent has shifted during execution. This is NOT for initial intent identification—that's handled by the orchestrator's skill sequence (pattern-match → boost-confidence → select-intents).
 
 ## When to Use
 
-- **Step 2**: Early in Level 2+ recipes, after STM initialization
-- **Re-invocable**: Yes - agents can call when unsure which intent they're serving
-- **By**: Recipe (initial) or Agent (subsequent)
+- **Agent re-evaluation**: When an agent detects intent may have shifted
+- **NOT for initial routing**: Orchestrator handles that via its skill sequence
+- **By**: Agents only (during Step 2: Execute Routing Plan)
 
 ## Inputs
 
@@ -26,7 +26,7 @@ Detect user intent(s) from query and context. Maps raw expression to actionable 
 
 ### Step 1: Load Intent Patterns from LTM
 
-Read intent definitions from `memory/ltm/intents/`:
+Read intent definitions from `memory/engine/intents/`:
 - `{domain}-intents.md` - Domain-specific intents (e.g., `cto-intents.md`)
 - `sequencing-rules.md` - Multi-intent ordering principles
 

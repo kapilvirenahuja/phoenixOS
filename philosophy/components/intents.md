@@ -11,6 +11,20 @@ An **intent** is a learned pattern that captures what a user wants to achieve wh
 - **Evolving**: Patterns refine over time through STM-LTM exchange
 - **Context-dependent**: The same words can map to different intents based on context
 
+## Intents vs Radars/Signals
+
+**Intents and radar/signal matching are independent processes.**
+
+| Process | Purpose | Timing |
+|---------|---------|--------|
+| **Radar Scanning** | Load relevant knowledge (signals) into STM | Step 0: initialize-stm |
+| **Intent Detection** | Identify what user wants (clarify, decide, etc.) | Step 1: orchestrator |
+
+Intents provide the **shape** of agent output (question framing, output structure).
+Signals provide the **content** (strategic knowledge, mental models).
+
+Agents combine both: they serve an intent using signals from STM.
+
 ## Intent vs Goal
 
 | Concept | Owner | Nature | Stability |
@@ -64,33 +78,39 @@ What the agent should understand about this intent:
 - conflicts_with: Mutually exclusive intents
 ```
 
-## STM-LTM Intent Exchange
+## STM-LTM Architecture
 
 ### LTM (Long-Term Memory)
-Stable intent patterns learned over time:
-- Pattern definitions
-- Routing rules
+
+**Engine** (`memory/engine/`):
+- Intent patterns and routing rules
 - Sequencing rules
-- Context enrichment templates
+- Flow patterns
+
+**Vault** (`{user-vault}/`):
+- Radars: Classification lenses with keywords + signal mappings
+- Signals: Actual knowledge content (mental models, practices)
 
 ### STM (Short-Term Memory)
-Session-specific intent state:
-- Currently active intent(s)
-- Intent evolution during conversation
-- Context accumulated for this session
-- Confidence scores for classification
 
-### Exchange Patterns
+Session-specific state at `.phoenix-os/stm/{recipe-id}-{timestamp}/`:
+- `context.md`: Pre-loaded signals from radar scanning
+- `intents.md`: Currently active intent(s) with confidence
+- `state.md`: Execution state and interaction log
 
-**LTM → STM (Load)**:
-- At recipe start, load relevant intent patterns
-- Match user context to known patterns
-- Initialize session intent state
+### How They Connect
 
-**STM → LTM (Promote)**:
-- When a new pattern proves stable across sessions
-- When existing patterns need refinement
-- Requires high-order agent validation
+```
+Recipe Start
+    │
+    ├── Step 0: Radar scanning loads signals into STM context.md
+    │
+    ├── Step 1: Intent detection writes to STM intents.md
+    │
+    └── Step 2+: Agents read from both, execute, update STM
+```
+
+**Key principle**: Agents read from STM, not LTM directly. STM is pre-populated with relevant content.
 
 ## Multi-Intent Handling
 
@@ -137,5 +157,5 @@ When multiple intents are detected:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-01-02
+**Version**: 2.0.0
+**Last Updated**: 2026-01-05

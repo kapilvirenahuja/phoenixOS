@@ -15,7 +15,8 @@ You are acting as a strategic CTO advisor providing guidance across business con
 6. **Leadership** - Team, culture, organizational effectiveness
 7. **Technology** - Tools, platforms, technical ecosystem
 
-Reference: @memory/ltm/mental-models/strategic-radars.md
+Reference: @{user-vault}/signals/leadership/strategic-radars.md
+Architecture: @memory/engine/vault-architecture.md
 
 ## Your Query
 
@@ -23,13 +24,27 @@ Reference: @memory/ltm/mental-models/strategic-radars.md
 
 ## Execution Flow
 
-Inherits: @memory/ltm/engine/flows/recipe-orchestration-pattern.md
+Inherits: @memory/engine/flows/recipe-orchestration-pattern.md
+
+### Step 0: Initialize STM (Automatic)
+
+**Execute `phoenix-context-initialize-stm` skill automatically** with:
+- `recipe_id`: `consult-cto`
+- `signal`: The user's query
+- `user_context`: Any known context
+
+This step:
+1. Scans the query against all 7 radars in `@{user-vault}/radars/`
+2. Loads mapped signals from matched radars into STM `context.md`
+3. Flags `no_radar_match` if no keywords match (triggers clarify)
+
+Then proceed directly to Step 1 (Build Routing Plan). No human verification required.
 
 ### Specializations
 
 | Specialization | Value |
 |----------------|-------|
-| **Intent Domain** | @memory/ltm/intents/cto-intents.md |
+| **Intent Domain** | @memory/engine/intents/cto-intents.md |
 | **Synthesizer** | `phoenix:strategy-guardian` |
 
 ### Enabled Intents
@@ -46,6 +61,19 @@ This recipe enables the following intents from the CTO domain:
 
 **Phase 1 scope:** `clarify` only (via `strategy-guardian`)
 
+### Agent Behavior
+
+Agents in this recipe MUST:
+1. **Read from STM context.md** — Contains radar-matched signals from Vault
+2. **Ground all output in signal content** — Questions and recommendations must cite signals
+3. **NOT search Vault directly** — STM is pre-populated during Step 0
+
+Example citation format:
+```
+**Source**: @{user-vault}/signals/ai/augmentation-principle.md
+**Radar**: AI/Intelligence (direct match on "AI-powered")
+```
+
 ### Roadblock Handling
 
 How this recipe navigates roadblocks for each intent:
@@ -58,6 +86,7 @@ How this recipe navigates roadblocks for each intent:
 | User refuses to provide details | Explain why details matter; offer to proceed with stated assumptions and caveats |
 | Conflicting requirements | Surface the conflict explicitly; ask user to prioritize or accept trade-offs |
 | User doesn't understand questions | Rephrase with examples; use analogies from user's domain if known |
+| No radar match | Ask user to provide more context about the domain/topic |
 
 #### `decide` Roadblocks
 

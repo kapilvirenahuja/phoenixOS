@@ -104,8 +104,8 @@ This document defines the structure of routing plans returned by `phoenix:orches
   },
 
   "metadata": {
-    "intent_domain": "@memory/ltm/intents/cto-intents.md",
-    "sequencing_rules": "@memory/ltm/intents/sequencing-rules.md",
+    "intent_domain": "@memory/engine/intents/cto-intents.md",
+    "sequencing_rules": "@memory/engine/intents/sequencing-rules.md",
     "replan_count": 0
   }
 }

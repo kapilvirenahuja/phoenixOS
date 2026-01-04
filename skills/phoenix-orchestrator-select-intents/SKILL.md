@@ -1,5 +1,5 @@
 ---
-name: orchestrator-select-intents
+name: phoenix-orchestrator-select-intents
 description: Apply confidence thresholds to select final intents. Third step in intent identification. Filters candidates, resolves dependencies, handles multi-intent queries.
 ---
 

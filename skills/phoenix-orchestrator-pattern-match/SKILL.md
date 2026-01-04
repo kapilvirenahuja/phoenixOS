@@ -1,5 +1,5 @@
 ---
-name: orchestrator-pattern-match
+name: phoenix-orchestrator-pattern-match
 description: Match user query against intent patterns from LTM. First step in intent identification. Scans query for pattern matches and returns candidate intents with initial confidence scores.
 ---
 
@@ -17,7 +17,7 @@ Match user query against intent patterns to identify candidate intents.
 | Input | Required | Description |
 |-------|----------|-------------|
 | `query` | Yes | User's raw query |
-| `intent_domain` | Yes | Path to intent patterns (e.g., `@memory/ltm/intents/cto-intents.md`) |
+| `intent_domain` | Yes | Path to intent patterns (e.g., `@memory/engine/intents/cto-intents.md`) |
 | `enabled_intents` | Yes | List of intents enabled by recipe |
 
 ## Instructions

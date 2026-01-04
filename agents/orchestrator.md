@@ -14,7 +14,7 @@ You are the Phoenix OS orchestrator - an engine agent responsible for analyzing 
 | Input | Description |
 |-------|-------------|
 | `query` | The user's query |
-| `context.intent_domain` | Reference to intent patterns (e.g., `@memory/ltm/intents/cto-intents.md`) |
+| `context.intent_domain` | Reference to intent patterns (e.g., `@memory/engine/intents/cto-intents.md`) |
 | `context.enabled_intents` | List of intents this recipe supports |
 | `context.available_agents` | Agents registered for this recipe |
 
@@ -24,7 +24,7 @@ You are the Phoenix OS orchestrator - an engine agent responsible for analyzing 
 |--------|-------------|
 | `routing_plan` | Execution plan conforming to routing-plan-schema |
 
-Reference: `@memory/ltm/engine/flows/routing-plan-schema.md`
+Reference: `@memory/engine/schemas/routing-plan-schema.md`
 
 ---
 
@@ -43,19 +43,19 @@ Recipes invoke me to:
 ## Skill Sequence
 
 ```
-1. orchestrator:pattern-match
+1. phoenix-orchestrator-pattern-match
    → candidate_intents[]
 
-2. orchestrator:boost-confidence
+2. phoenix-orchestrator-boost-confidence
    → scored_intents[]
 
-3. orchestrator:select-intents
+3. phoenix-orchestrator-select-intents
    → selected_intents[]
 
-4. orchestrator:match-agents
+4. phoenix-orchestrator-match-agents
    → agent_assignments[]
 
-5. orchestrator:build-plan
+5. phoenix-orchestrator-build-plan
    → routing_plan
 ```
 
@@ -134,7 +134,7 @@ For each selected intent:
 
 #### Step 6: Build Routing Plan
 
-Apply rules from `@memory/ltm/intents/sequencing-rules.md`:
+Apply rules from `@memory/engine/intents/sequencing-rules.md`:
 
 | Rule Source | Applied To |
 |-------------|------------|
@@ -200,11 +200,11 @@ Apply rules from `@memory/ltm/intents/sequencing-rules.md`:
 
 | Skill | Purpose | Status |
 |-------|---------|--------|
-| `orchestrator:pattern-match` | Match query against intent patterns | Planned |
-| `orchestrator:boost-confidence` | Apply context signals to boost scores | Planned |
-| `orchestrator:select-intents` | Apply thresholds and resolve dependencies | Planned |
-| `orchestrator:match-agents` | Map intents to available agents | Planned |
-| `orchestrator:build-plan` | Construct routing plan per schema | Planned |
+| `phoenix-orchestrator-pattern-match` | Match query against intent patterns | ✓ Complete |
+| `phoenix-orchestrator-boost-confidence` | Apply context signals to boost scores | ✓ Complete |
+| `phoenix-orchestrator-select-intents` | Apply thresholds and resolve dependencies | ✓ Complete |
+| `phoenix-orchestrator-match-agents` | Map intents to available agents | ✓ Complete |
+| `phoenix-orchestrator-build-plan` | Construct routing plan per schema | ✓ Complete |
 
 ---
 
@@ -232,8 +232,44 @@ When re-invoked after roadblock resolution:
 
 | Type | Access | Purpose |
 |------|--------|---------|
-| LTM | Read | Load intent patterns, sequencing rules |
+| Engine | Read | Intent patterns, sequencing rules, flow mechanics |
+| STM context.md | Read | **Pre-loaded signals** — radar-matched content from Vault |
 | STM | Read/Write | Store routing plan, replan history |
+
+### Signal-Grounded Protocol
+
+**⛔ DO NOT search Vault directly.** STM is pre-populated during Step 0 with radar-matched signals.
+
+| Step | Engine Source | STM Context |
+|------|---------------|-------------|
+| Pattern matching | `memory/engine/intents/` | — |
+| Confidence boosting | Context signals | Read STM context.md for signal content |
+| Context enrichment | `probe_for` from intents | Include matched signals in agent inputs |
+| Plan building | `memory/engine/flows/` | — |
+
+**When building `inputs` for agent invocations:**
+
+```json
+{
+  "agent": "phoenix:strategy-guardian",
+  "intent": "clarify",
+  "inputs": {
+    "user_needs": "...",
+    "expects": "...",
+    "probe_for": [...],
+    "stm_context": {
+      "matched_radars": ["AI/Intelligence", "Purpose/Why"],
+      "signals_loaded": [
+        "@{user-vault}/signals/ai/augmentation-principle.md",
+        "@{user-vault}/signals/leadership/strategic-radars.md"
+      ],
+      "note": "Signals are pre-loaded in STM context.md — agent reads from there"
+    }
+  }
+}
+```
+
+This ensures downstream agents know which signals are available in STM.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: orchestrator-match-agents
+name: phoenix-orchestrator-match-agents
 description: Map selected intents to available agents. Fourth step in orchestration. Verifies agent availability, extracts context enrichment for agent inputs.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: orchestrator-build-plan
+name: phoenix-orchestrator-build-plan
 description: Construct routing plan from agent assignments. Final step in orchestration. Applies sequencing rules, determines execution mode, outputs plan per schema.
 ---
 
@@ -19,7 +19,7 @@ Construct the routing plan for recipe execution.
 |-------|----------|-------------|
 | `agent_assignments` | Yes | Mapped agents from match-agents |
 | `query` | Yes | Original user query |
-| `sequencing_rules` | Yes | Path to sequencing rules (`@memory/ltm/intents/sequencing-rules.md`) |
+| `sequencing_rules` | Yes | Path to sequencing rules (`@memory/engine/intents/sequencing-rules.md`) |
 | `synthesizer` | Yes | Synthesizer agent from recipe |
 | `replan_count` | No | Current replan count (default 0) |
 
@@ -126,14 +126,14 @@ Build routing plan per schema:
     "inputs": {}
   },
   "metadata": {
-    "intent_domain": "@memory/ltm/intents/cto-intents.md",
-    "sequencing_rules": "@memory/ltm/intents/sequencing-rules.md",
+    "intent_domain": "@memory/engine/intents/cto-intents.md",
+    "sequencing_rules": "@memory/engine/intents/sequencing-rules.md",
     "replan_count": 0
   }
 }
 ```
 
-Reference: `@memory/ltm/engine/flows/routing-plan-schema.md`
+Reference: `@memory/engine/schemas/routing-plan-schema.md`
 
 ## Success Criteria
 

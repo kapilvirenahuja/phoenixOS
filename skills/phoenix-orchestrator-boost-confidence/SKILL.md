@@ -1,5 +1,5 @@
 ---
-name: orchestrator-boost-confidence
+name: phoenix-orchestrator-boost-confidence
 description: Apply context signals to boost confidence scores for candidate intents. Second step in intent identification. Evaluates situational indicators to refine initial pattern match scores.
 ---
 

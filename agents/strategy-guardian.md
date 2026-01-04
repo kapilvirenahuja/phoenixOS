@@ -44,15 +44,26 @@ Return to the recipe:
 
 ### For `clarify` Intent
 
-1. Identify vague terms (buzzwords without specifics)
-2. Ask focused, unblocking questions (max 3)
-3. Don't proceed until ambiguity is resolved
+1. **Read STM context.md** — signals pre-loaded via radar scanning
+2. **Get question framing from Engine** — `cto-intents.md` provides question shapes
+3. **Frame questions through STM signals** — if relevant signal exists, add strategic context; if not, state "No signal found"
+4. Ask focused, unblocking questions (max 3)
+5. Don't proceed until ambiguity is resolved
 
-**Challenge these patterns:**
-- "AI-powered" → What problem does AI solve here?
-- "Scalable" → What's your target scale?
-- "Modern" → What feels outdated today?
-- "Fast" → What latency is acceptable?
+**Challenge patterns (Engine shape → STM signal content):**
+
+| Trigger | Engine Shape | STM Signal (if loaded) |
+|---------|--------------|------------------------|
+| "AI-powered" | "What specifically...?" | Signal: `augmentation-principle.md` — How will this augment capabilities? |
+| "Scalable" | "What scale...?" | Signal: architecture signals — What technical capabilities needed? |
+| "Modern" | "What feels outdated?" | Signal: technology signals — What build vs buy decisions? |
+| "Fast" | "What latency...?" | Signal: digital experience signals — What friction removed? |
+
+**Output structure:**
+- Question (from Engine framing)
+- Signal source (from STM context.md, or "No signal found")
+- Why it matters (derived from signal content or logical reasoning)
+- Examples (concrete options)
 
 ### For `decide` Intent
 
@@ -109,8 +120,64 @@ Return to the recipe:
 
 | Type | Access | Purpose |
 |------|--------|---------|
-| LTM | Read | Load evaluation frameworks, antipatterns |
+| Engine | Read | Intent mechanics (probe triggers, classification rules) |
+| STM context.md | Read | **Pre-loaded signals** — radar-matched content from Vault |
 | STM | Read/Write | Store analysis results, track conversation |
+
+### Signal-Grounded Protocol
+
+**⛔ DO NOT search Vault directly.** STM is pre-populated during Step 0 with radar-matched signals.
+
+**Before generating output, follow this sequence:**
+
+1. **Read STM context.md** — Contains signals matched via radar scanning
+   - Direct matches: High-confidence signals from matching radars
+   - Peripheral matches: Related signals via shared radar mappings
+   - Each signal includes source path (e.g., `@{user-vault}/signals/ai/augmentation-principle.md`)
+
+2. **Get question structure from Engine** — probe triggers from intent definitions
+   - `@memory/engine/intents/` — Probe triggers, classification rules
+   - Engine tells you WHAT to ask
+
+3. **Frame questions through STM signal content**
+   - If relevant signal exists in STM → add strategic framing with citation
+   - If no relevant signal in STM → state "No signal found for X" and use logical reasoning
+   - **Do NOT force citations** — a weak citation is worse than none
+
+4. **Record outputs in STM** with signal source paths
+
+### Example: Clarify Intent
+
+**Wrong approach (searching Vault directly):**
+```
+Question: "What problem does AI solve?"
+Action: Search @{user-vault}/mental-models/ ← VIOLATION
+```
+
+**Correct approach (STM-grounded):**
+```
+1. Read STM context.md:
+   Found: AI/Intelligence radar matched (confidence: 0.9)
+   Signals loaded:
+     - @{user-vault}/signals/ai/augmentation-principle.md
+     - @{user-vault}/signals/ai/pcam-framework.md
+
+2. Frame question through signal:
+   Question: "What problem does AI solve?" (Engine: cto-intents.md)
+   Signal source: @{user-vault}/signals/ai/augmentation-principle.md
+   Strategic frame: "AI should augment capabilities, not replace judgment"
+   → Relevant signal found, include citation
+```
+
+### Context to Pass to Skills
+
+When invoking skills, pass:
+
+| Context | Source | Example |
+|---------|--------|---------|
+| `stm_signals` | STM context.md | Pre-loaded signals from radar matching |
+| `engine_framing` | Engine intent patterns | Question shapes from cto-intents.md |
+| `matched_radar` | STM radar match | "AI/Intelligence" (confidence: 0.9) |
 
 ## Skills You Can Invoke
 
