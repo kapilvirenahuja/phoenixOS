@@ -98,16 +98,14 @@ PhoenixOS is fundamentally an agentic system where specialized AI agents work to
 ## Core Components
 
 ### Signals
-**Perception layer for system awareness.**
+**Entry points that trigger recipe execution.**
 
-Inputs trigger behavior:
-- User prompts (in CLI or Receipe invoications)
-- File changes (like workflows tied to git)
-- Git events
-- Environment state
-- Agent outputs
+Current signal type:
+- **Manual Invocation**: User runs `/recipe-name "query"` in CLI
 
-Signals inform decisions without prescribing actions.
+Signals are stateless, unidirectional, and always enter through recipes—never directly to agents.
+
+> **See also**: [Signals Component](./components/signals.md) for detailed documentation.
 
 ---
 
@@ -155,34 +153,53 @@ In Phoenix OS, **Agents own decisions, not procedures**. They determine the "how
 **State persistence across time and sessions.**
 
 #### Short-Term Memory (STM)
-Session and branch-specific context:
-- Current branch state
-- Active failures
-- In-progress changes
-- Task context
+Session and recipe-specific context:
+- Pre-loaded signals from radar matching
+- Active intents with confidence scores
+- Execution state and interaction log
+- Task artifacts and intermediate outputs
+
+**Structure**:
+```
+.phoenix-os/stm/{recipe-id}-{timestamp}/
+├── state.md       # Execution state
+├── context.md     # Pre-loaded signals
+├── intents.md     # Active intents
+└── outputs/       # Step outputs
+```
 
 #### Long-Term Memory (LTM)
-Persistent organizational knowledge across three dimensions:
+Persistent knowledge organized into **Engine** (system) and **Vault** (user knowledge).
 
-**Domain**:
-- Business rules and compliance requirements
-- Industry-specific patterns
-- Domain models and terminology
+**Engine** (`memory/engine/`):
+- Intent patterns and routing rules
+- Orchestration flows and schemas
+- System knowledge
 
-**Architecture**:
-- System design decisions (monolith, microservices, serverless)
-- Integration patterns and API contracts
-- Styling and component structure rules
+**Vault** (`{user-vault}/`):
+Two-layer architecture:
 
-**Technology**:
-- Tech stack decisions and approved libraries
-- Coding standards and conventions
-- Known pitfalls and best practices
+| Layer | Purpose | Location |
+|-------|---------|----------|
+| **Radars** | Classification lenses with keywords | `vault/radars/` |
+| **Signals** | Actual knowledge content | `vault/signals/` |
+
+**7 Strategic Radars**:
+1. **Purpose** — Mission, vision, strategy, north star
+2. **Innovation** — Disruption, emerging tech, experimentation
+3. **Digital Experience** — UX, customer experience, usability
+4. **AI/Intelligence** — AI, ML, automation, intelligent systems
+5. **Evolutionary Architecture** — Scalability, microservices, API design
+6. **Leadership** — Team, culture, hiring, talent management
+7. **Technology** — Tools, platforms, frameworks, tech stack
+
+Radars contain keywords that match user queries. Matched radars load their mapped signals into STM.
 
 #### Phoenix OS Memory Rules
 - Agents may update **STM freely**
 - **LTM updates require higher-order validation**
 - Memory contains **knowledge, not process**
+- **Agents read from STM, not Vault directly** — STM is pre-populated during Step 0
 
 Memory enables deterministic adaptation.
 

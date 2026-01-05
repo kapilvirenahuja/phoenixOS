@@ -11,6 +11,43 @@ An **intent** is a learned pattern that captures what a user wants to achieve wh
 - **Evolving**: Patterns refine over time through STM-LTM exchange
 - **Context-dependent**: The same words can map to different intents based on context
 
+## SDLC Phases vs Intent Model
+
+**SDLC phases are the high-level philosophy. Intents are the architecture that operates WITHIN each phase.**
+
+### SDLC: The What
+
+```
+DISCOVER → SPECIFY → DESIGN → BUILD → RUN
+```
+
+These phases define what Phoenix OS does—the software development lifecycle.
+
+### Intent Model: The How
+
+Intents (clarify, decide, validate, consult, advise, design) are the **mechanism** for executing work within any phase.
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  DISCOVER Phase                                                │
+│  ├─ clarify: "What problem are we solving?"                    │
+│  ├─ consult: "How do similar products handle this?"            │
+│  └─ advise: "Is this worth pursuing?"                          │
+├────────────────────────────────────────────────────────────────┤
+│  DESIGN Phase                                                  │
+│  ├─ clarify: "What should this component do?"                  │
+│  ├─ decide: "Should we use React or Vue?"                      │
+│  └─ validate: "Will this architecture scale?"                  │
+├────────────────────────────────────────────────────────────────┤
+│  BUILD Phase                                                   │
+│  ├─ clarify: "What edge cases should we handle?"               │
+│  ├─ consult: "How do I implement this pattern?"                │
+│  └─ validate: "Is this implementation correct?"                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Key insight**: The same intent (e.g., `clarify`) can exist in any SDLC phase. The phase provides context; the intent provides the interaction pattern.
+
 ## Intents vs Radars/Signals
 
 **Intents and radar/signal matching are independent processes.**

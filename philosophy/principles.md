@@ -16,6 +16,7 @@ The core flow is aligned with standards where CLIs are moving towards. Claude-co
 
 The part that is unique to our approach is Memory and Context building. No CLI harness adopts this approach, yet we feel this is going to be critical. The approach that each follows is via AGENT.MD or CLAUDE.MD that represent memory, we expect this towards a more structured approach.
 
+**Philosophy-level flow**:
 ```
 Signal → Recipe → Sub-Agent(s) → Skill(s) → Execute
                        ↓
@@ -23,6 +24,8 @@ Signal → Recipe → Sub-Agent(s) → Skill(s) → Execute
                        ↓
                  Build Context
 ```
+
+**Note**: The internal implementation of `Recipe → Sub-Agent` involves additional steps (STM initialization, orchestrator routing, skill chains). See [Recipe Orchestration](./components/recipe-orchestration.md) for implementation details.
 
 #### AI-Native SDLC Steps
 
@@ -54,36 +57,21 @@ Recipe ──► Sub-Agent ──► Skill(s) ──► Execute
 
 ### Signals
 
-**Role**: Perception layer for system awareness.
+**Role**: Entry points that trigger recipe execution.
 
 #### Characteristics
 
-- **Event-driven**: Triggered by external or internal events
 - **Stateless**: Carry information but hold no state
 - **Unidirectional**: Flow into the system, never out
 - **Recipe-bound**: Always enter through recipes, never directly to agents
 
-#### Responsibilities
+#### Current Signal Types
 
-1. **Event Capture**
-   - Detect and capture relevant events from various sources
-   - Package event data in consistent format
+| Type | Source | Example |
+|------|--------|---------|
+| **Manual Invocation** | User CLI command | `/consult-cto "Should I use microservices?"` |
 
-2. **Intent Communication**
-   - Communicate user or system intent to recipes
-   - Provide context for decision-making
-
-3. **Recipe Initiation**
-   - Trigger appropriate recipe execution
-   - Enable both manual and automated workflows
-
-#### Types
-
-| Type | Source | Trigger | Example |
-|------|--------|---------|---------|
-| **User Prompt** | CLI, IDE | Manual command | `/fix-bug ISSUE-123` |
-| **Schedule** | Cron/Timer | Time-based | Daily at 9:00 AM |
-| **Webhook** | External | HTTP callback | GitHub PR review submitted |
+**Note**: Additional signal types (webhooks, scheduled triggers) will be added as Phoenix OS matures.
 
 #### Rules
 
@@ -92,7 +80,7 @@ Recipe ──► Sub-Agent ──► Skill(s) ──► Execute
 - Signals do not update memory directly
 - Signals inform decisions without prescribing actions
 
-> **See also**: [Signals Reference](../usage/signals.md) for a complete list of available signals.
+> **See also**: [Signals Component](./components/signals.md) for detailed signal documentation.
 
 ---
 
@@ -308,32 +296,45 @@ Pre-configured set of instructions which drive a clear set of instructions towar
 
 **Short-Term Memory (STM)**
 
-- **Lifecycle**: Created and used within a single work context (branch/worktree)
-- **Content**: Branch state, active failures, in-progress changes, task artifacts (specs, RCA, designs)
+- **Lifecycle**: Created per recipe execution
+- **Content**: Pre-loaded signals, active intents, execution state, outputs
 - **Structure**:
   ```
-  .phoenix-os/project/work/{issue-number}/
-  ├── spec.md, tech-design.md, rca.md, todo.md, evidence/
+  .phoenix-os/stm/{recipe-id}-{timestamp}/
+  ├── state.md       # Execution state, interaction log
+  ├── context.md     # Pre-loaded signals from radar matching
+  ├── intents.md     # Active intents with confidence scores
+  └── outputs/       # Results from each step
   ```
 
 **Long-Term Memory (LTM)**
 
-- **Lifecycle**: Persists across sessions and branches
-- **Content** (organized by dimension):
+- **Lifecycle**: Persists across sessions and recipes
+- **Two-part structure**:
 
-| Dimension | Content | Example Files |
-|-----------|---------|---------------|
-| **Domain** | Business rules, compliance, industry patterns | `domain/business-rules.md` |
-| **Architecture** | System design, integration patterns | `architecture/component-patterns.md` |
-| **Technology** | Tech stack, coding standards | `technology/react-patterns.md` |
-| **Practices** | Workflows, quality gates | `practices/bug-fixing/rca-guidelines.md` |
-| **Tools** | Tool-specific patterns | `tools/github/commit-guidelines.md` |
+**Engine** (`memory/engine/`):
+| Content | Purpose |
+|---------|---------|
+| `intents/` | Intent patterns and routing rules |
+| `flows/` | Orchestration patterns |
+| `schemas/` | Data structure definitions |
 
-- **Structure**:
-  ```
-  core/memory/{domain,architecture,technology,practices,tools}/
-  ```
-- **Storage**: GitHub repository (version controlled), or remote memory tools
+**Vault** (`{user-vault}/`):
+| Layer | Purpose |
+|-------|---------|
+| `radars/` | Classification lenses with keywords |
+| `signals/` | Actual knowledge content |
+
+**7 Strategic Radars** (classification dimensions):
+1. Purpose — Mission, vision, strategy
+2. Innovation — Disruption, experimentation
+3. Digital Experience — UX, customer experience
+4. AI/Intelligence — AI, ML, automation
+5. Evolutionary Architecture — Scalability, patterns
+6. Leadership — Team, culture, talent
+7. Technology — Tools, platforms, stack
+
+- **Storage**: Repository (version controlled)
 
 #### Rules
 

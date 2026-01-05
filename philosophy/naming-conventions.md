@@ -97,6 +97,7 @@ Agents aligned to **standard SDLC positions**.
 
 | Agent | SDLC Role | Responsibility |
 |-------|-----------|----------------|
+| `advisor` | Advisor | Strategic counsel, experienced perspective |
 | `developer` | Developer | Code implementation, TDD |
 | `tech-lead` | Tech Lead | Technical design, architecture decisions |
 | `scrum-master` | Scrum Master | Progress tracking, todo management |
@@ -116,15 +117,19 @@ Agents with **specialized operations** within a domain.
 | `security-auditor` | Security | Security assessment |
 | `performance-analyzer` | Performance | Performance analysis |
 
-#### High-Order Agents: `{domain}-guardian` or `{domain}-alchemist`
+#### High-Order Agents: `{domain}-guardian`, `{domain}-alchemist`, or `orchestrator`
 
-Agents with **LTM write access** for governance and evolution.
+Agents with **LTM write access** for governance, evolution, and system orchestration.
 
 | Agent | Type | Responsibility |
 |-------|------|----------------|
+| `orchestrator` | Engine | Intent detection, routing, plan building |
+| `strategy-guardian` | Guardian | Strategic decisions, validation, clarification |
 | `standards-guardian` | Guardian | Enforce and evolve standards |
 | `pattern-alchemist` | Alchemist | Transform and create patterns |
 | `compliance-guardian` | Guardian | Regulatory compliance |
+
+**Note**: The `orchestrator` is a special high-order engine agent that handles intent classification and agent routing. It does not perform domain work—it routes to agents that do.
 
 ### Registration Format
 
@@ -169,47 +174,49 @@ phoenix:tech-lead
 | Aspect | Convention | Rationale |
 |--------|------------|-----------|
 | **File Case** | `kebab-case.md` | Consistent file naming |
-| **Invocation** | `{domain}:{action}` | Namespace + verb pattern |
+| **Invocation** | `{domain}-{action}` | Namespace + verb pattern |
 | **Location** | `core/commands/phoenix/{domain}/` | Domain-based grouping |
 
 ### Pattern Structure
 
 ```
-{domain}:{action}[-{target}]
+{domain}-{action}[-{target}]
 
-domain = capability area (plan, impl, bug, test, deploy, review)
-action = imperative verb (fetch, create, analyze, apply, execute)
-target = optional object (issue, pr, branch)
+domain = capability area (phoenix-context, phoenix-orchestrator, consult, impl, bug, test, deploy, review)
+action = imperative verb (initialize, analyze, match, fetch, create, apply, execute)
+target = optional object (stm, request, issue, pr, branch)
 ```
+
+**Note**: Skills use hyphen separation throughout. The `phoenix-` prefix denotes system-level skills.
 
 ### Domain Categories
 
-| Domain | Prefix | Description | Examples |
-|--------|--------|-------------|----------|
-| `plan` | `plan:` | Planning and project management | Issues, tracking, backlog |
-| `impl` | `impl:` | Implementation and coding | Code, commits, design |
-| `bug` | `bug:` | Bug analysis and fixing | RCA, fix application |
-| `test` | `test:` | Testing operations | Unit, integration, E2E |
-| `deploy` | `deploy:` | Deployment and releases | Release, rollback |
-| `review` | `review:` | Code review operations | PR review, feedback |
+| Domain | Description | Examples |
+|--------|-------------|----------|
+| `phoenix-context` | Memory and context management | STM initialization, updates, intent identification |
+| `phoenix-orchestrator` | Intent detection and routing | Pattern matching, confidence boosting, plan building |
+| `consult` | Consultation and clarification | Request analysis, requirements clarification, synthesis |
+| `impl` | Implementation and coding | Code, commits, design |
+| `bug` | Bug analysis and fixing | RCA, fix application |
+| `test` | Testing operations | Unit, integration, E2E |
+| `deploy` | Deployment and releases | Release, rollback |
+| `review` | Code review operations | PR review, feedback |
 
 ### Examples
 
-| Skill Name | File Path | Description |
+| Skill Name | Directory | Description |
 |------------|-----------|-------------|
-| `plan:fetch-issue` | `plan/fetch-issue.md` | Retrieve issue details |
-| `plan:record-issue` | `plan/record-issue.md` | Create or update issues |
-| `plan:record-subtasks` | `plan/record-subtasks.md` | Create subtasks for an issue |
-| `impl:start-work` | `impl/start-work.md` | Initialize work environment |
-| `impl:prepare` | `impl/prepare.md` | Create spec and initial todos |
-| `impl:design` | `impl/design.md` | Create technical design |
-| `impl:code` | `impl/code.md` | Execute implementation |
-| `impl:commit` | `impl/commit.md` | Create conventional commits |
-| `impl:create-pr` | `impl/create-pr.md` | Create pull request |
-| `impl:review-pr` | `impl/review-pr.md` | Review pull request |
-| `impl:merge-pr` | `impl/merge-pr.md` | Merge pull request |
-| `bug:analyze` | `bug/analyze.md` | Perform root cause analysis |
-| `bug:apply-fix` | `bug/apply-fix.md` | Apply bug fix implementation |
+| `phoenix-context-initialize-stm` | `phoenix-context-initialize-stm/` | Initialize STM workspace, load signals |
+| `phoenix-context-update-stm` | `phoenix-context-update-stm/` | Update STM after user response |
+| `phoenix-context-identify-intent` | `phoenix-context-identify-intent/` | Re-evaluate intent mid-execution |
+| `phoenix-orchestrator-pattern-match` | `phoenix-orchestrator-pattern-match/` | Match query against intent patterns |
+| `phoenix-orchestrator-boost-confidence` | `phoenix-orchestrator-boost-confidence/` | Apply context signals to refine scores |
+| `phoenix-orchestrator-select-intents` | `phoenix-orchestrator-select-intents/` | Apply thresholds, resolve dependencies |
+| `phoenix-orchestrator-match-agents` | `phoenix-orchestrator-match-agents/` | Map intents to available agents |
+| `phoenix-orchestrator-build-plan` | `phoenix-orchestrator-build-plan/` | Construct routing plan |
+| `consult-analyze-request` | `consult-analyze-request/` | Analyze request for complexity/vagueness |
+| `consult-clarify-requirements` | `consult-clarify-requirements/` | Generate signal-grounded questions |
+| `consult-synthesize-response` | `consult-synthesize-response/` | Consolidate information into synthesis |
 
 ### Rules
 
@@ -223,11 +230,12 @@ target = optional object (issue, pr, branch)
 
 | Avoid | Prefer | Reason |
 |-------|--------|--------|
-| `runTests` | `test:execute` | Use domain prefix |
-| `fetchIssue` | `plan:fetch-issue` | Use kebab-case with domain |
-| `doCommit` | `impl:commit` | Remove unnecessary "do" |
-| `helper:util` | `impl:format-code` | Be specific, avoid generic |
-| `create_pr` | `impl:create-pr` | No underscores |
+| `runTests` | `test-execute` | Use domain prefix with hyphen |
+| `fetchIssue` | `plan-fetch-issue` | Use kebab-case with domain |
+| `doCommit` | `impl-commit` | Remove unnecessary "do" |
+| `helper:util` | `impl-format-code` | Be specific, avoid generic |
+| `create_pr` | `impl-create-pr` | No underscores, use hyphens |
+| `plan:fetch` | `plan-fetch-issue` | Use hyphen, not colon |
 
 ---
 
@@ -235,12 +243,13 @@ target = optional object (issue, pr, branch)
 
 | Component | Pattern | Example | Registration/Invocation |
 |-----------|---------|---------|-------------------------|
-| **Recipe** | `{verb}-{noun}` | `fix-bug` | `/fix-bug` |
+| **Recipe** | `{verb}-{noun}` | `consult-cto` | `/consult-cto` |
 | **Agent (Steward)** | `{domain}-keeper` | `repo-keeper` | `phoenix:repo-keeper` |
-| **Agent (Role)** | `{sdlc-role}` | `developer` | `phoenix:developer` |
+| **Agent (Role)** | `{sdlc-role}` | `advisor` | `phoenix:advisor` |
 | **Agent (Specialist)** | `{domain}-{action}er` | `bug-analyzer` | `phoenix:bug-analyzer` |
-| **Agent (High-Order)** | `{domain}-guardian` | `standards-guardian` | `phoenix:standards-guardian` |
-| **Skill** | `{domain}:{action}` | `impl:code` | `impl:code` |
+| **Agent (High-Order)** | `{domain}-guardian` | `strategy-guardian` | `phoenix:strategy-guardian` |
+| **Agent (Engine)** | `orchestrator` | `orchestrator` | `phoenix:orchestrator` |
+| **Skill** | `{domain}-{action}` | `consult-analyze-request` | `consult-analyze-request` |
 
 ---
 
@@ -249,25 +258,28 @@ target = optional object (issue, pr, branch)
 ```
 Is it a workflow that orchestrates multiple agents?
 ├─► YES → Recipe: {verb}-{noun}
-│         Example: fix-bug, implement-component
+│         Example: consult-cto, fix-bug
 │
 └─► NO → Is it an autonomous decision-maker?
          ├─► YES → Agent
+         │         │
+         │         ├─► Engine/routing agent? → orchestrator
+         │         │   Example: orchestrator (intent detection & routing)
          │         │
          │         ├─► Steward of a domain? → {domain}-keeper
          │         │   Example: project-keeper, repo-keeper
          │         │
          │         ├─► SDLC role? → {role-name}
-         │         │   Example: developer, tech-lead
+         │         │   Example: advisor, developer, tech-lead
          │         │
          │         ├─► Specialized operation? → {domain}-{action}er
          │         │   Example: bug-analyzer, code-reviewer
          │         │
          │         └─► High-order governance? → {domain}-guardian
-         │             Example: standards-guardian
+         │             Example: strategy-guardian, standards-guardian
          │
-         └─► NO → Skill: {domain}:{action}
-                  Example: impl:code, plan:fetch-issue
+         └─► NO → Skill: {domain}-{action}
+                  Example: consult-analyze-request, phoenix-context-initialize-stm
 ```
 
 ---
