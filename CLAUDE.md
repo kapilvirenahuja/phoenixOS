@@ -46,6 +46,30 @@ Violation of response gates = pattern breach.
 
 **Execute silently until a response gate is reached.**
 
+#### ⛔ Skill Output Handling (CRITICAL)
+
+When executing skills during Steps 0, 1, 2:
+
+**Skill outputs are INTERNAL ONLY. Never display to user.**
+
+| Output Type | Correct Handling | Wrong Handling |
+|-------------|------------------|----------------|
+| JSON schemas/outputs | Write to STM `outputs/` folder | Display to user |
+| Completeness scores | Keep in working memory | Show evaluation table |
+| Semantic analysis | Use internally, write to STM | Show match results |
+| Routing plans | Write to STM, use for execution | Display JSON |
+| Intermediate processing | Keep in working memory | Narrate steps |
+
+**The user should see NOTHING until a response gate is reached.**
+
+After response gates:
+- **Clarification gate**: Show only the clarifying questions (formatted per template)
+- **Synthesis gate**: Show only the Strategic Brief (human-readable summary)
+- **Blocked gate**: Explain the blocker
+- **Error gate**: Explain the failure
+
+Internal artifacts (JSON, scores, analysis) go to STM files, not to user output.
+
 #### Step 0 Completion Criteria (Auto-Verified)
 
 Step 0 completes automatically when all of the following exist:
@@ -64,6 +88,56 @@ Step 0 completes automatically when all of the following exist:
 - **Pattern integrity** — Partial execution breaks the orchestration contract
 
 Reference: `@memory/engine/flows/recipe-orchestration-pattern.md`
+
+---
+
+### 2. Procedural State Tracking via TodoWrite (MANDATORY)
+
+**Problem**: Instructions alone don't survive context switches. Without external state, execution defaults to conversational patterns (do something → report back).
+
+**Solution**: Use TodoWrite to create external execution state that persists across tool invocations.
+
+#### At Recipe Start
+
+Immediately create todos for all procedural steps:
+
+```
+TodoWrite([
+  { content: "Step 0: Initialize STM", status: "pending", activeForm: "Initializing STM" },
+  { content: "Step 1: Build routing plan", status: "pending", activeForm: "Building routing plan" },
+  { content: "Step 2: Execute routing plan", status: "pending", activeForm: "Executing routing plan" },
+  { content: "Step 3: Reach response gate", status: "pending", activeForm: "Reaching response gate" }
+])
+```
+
+#### During Execution
+
+- Mark each step `in_progress` before starting it
+- Mark each step `completed` immediately after finishing it
+- Only ONE step should be `in_progress` at a time
+
+#### The Rule
+
+> **If any silent step (0, 1, 2) is `in_progress` or `pending`, you are NOT at a response gate. Continue execution silently.**
+
+#### Pre-Output Check (MANDATORY)
+
+Before ANY text output to user during Level 2 recipes:
+
+1. Check TodoWrite state
+2. Are Steps 0, 1, 2 all `completed`?
+3. Is Step 3 (response gate) `in_progress`?
+4. Is a gate condition met (clarify | blocked | synthesis | error)?
+
+If YES to all → output per gate format
+If NO to any → continue execution silently
+
+#### Why This Works
+
+- **External state** — Todos persist across tool invocations
+- **Visible progress** — User can see execution state
+- **Natural continuation** — `in_progress` on a silent step = "not done yet"
+- **System reinforcement** — System nudges about TodoWrite become "check your state" prompts
 
 ---
 
@@ -266,5 +340,64 @@ Before generating any output:
 
 ---
 
-**Version**: 2.0.0
+## Agent Skill Invocation (MANDATORY)
+
+**Reference**: Agent definitions in `@agents/`
+
+### The Rule
+
+**Agents MUST invoke their defined skill chains. Agents MUST NOT perform skill work directly.**
+
+This applies to:
+- `phoenix:orchestrator` — MUST invoke the 5-step orchestrator skill sequence
+- `phoenix:strategy-guardian` — MUST invoke the consult skill chain for clarify intent
+
+### Why This Matters
+
+Skills provide:
+1. **Testability** — Skills have defined inputs/outputs that can be validated
+2. **Auditability** — Skill invocations are traceable
+3. **Signal-grounding** — Skills enforce reading from STM, not searching Vault
+4. **Consistency** — Skills produce structured output per schema
+
+### Enforcement
+
+When spawning agents via Task tool, the agent MUST read its definition and follow the skill chain:
+
+```
+Agent receives task → Reads @agents/{agent-name}.md → Invokes skill chain → Returns structured output
+```
+
+Each agent definition contains a "MANDATORY: Invoke Skill Sequence/Chain" section that specifies exactly which skills to invoke and in what order.
+
+### Anti-Pattern Detection
+
+If an agent output shows:
+- Questions without `signal_path` citations → skill chain was bypassed
+- Routing plans without explicit skill invocation traces → orchestrator skills were bypassed
+- Analysis without structured output per skill schema → skill was not invoked
+
+...the agent has violated the skill invocation requirement.
+
+### Correct Pattern
+
+```
+# Orchestrator building routing plan:
+Skill("phoenix-orchestrator-pattern-match") → candidate_intents
+Skill("phoenix-orchestrator-boost-confidence") → scored_intents
+Skill("phoenix-orchestrator-select-intents") → selected_intents
+Skill("phoenix-orchestrator-match-agents") → agent_assignments
+Skill("phoenix-orchestrator-build-plan") → routing_plan
+
+# Strategy-guardian handling clarify intent:
+Skill("consult-analyze-request") → analysis
+Skill("consult-clarify-requirements") → questions with citations
+[user responds]
+Skill("consult-synthesize-response") → synthesis with next_intent
+```
+
+---
+
+**Version**: 3.1.0
 **Last Updated**: 2026-01-05
+**Changes**: Added Section 2 - Procedural State Tracking via TodoWrite to prevent conversational pattern fallback during recipe execution

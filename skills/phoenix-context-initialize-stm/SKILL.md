@@ -70,52 +70,141 @@ Create the STM workspace at `.phoenix-os/stm/{recipe-id}-{timestamp}/`:
 
 ### Step 2: Scan Query Against Radars
 
-#### 2a: Load Radar Files
+#### 2a: Semantic Radar Matching
 
-Read all radar files from `{user-vault}/radars/`. Each radar contains:
-- **Keywords** (Primary and Secondary) — for matching
-- **Signal Mappings** — paths to actual signal files
-
-#### 2b: Direct Matching
-
-For each radar file:
-
-1. Extract `Keywords.Primary` and `Keywords.Secondary`
-2. Tokenize the query
-3. Check for keyword matches:
+**Invoke skill**: `phoenix-vault-analyze-query-semantics`
 
 ```
-If query contains ANY keyword from radar.keywords.primary:
-  → DIRECT MATCH (confidence: 0.9)
-Else if query contains ANY keyword from radar.keywords.secondary:
-  → DIRECT MATCH (confidence: 0.7)
-Else:
-  → No direct match for this radar
+Input:
+  - query: {user's raw query}
+  - radars_path: {user-vault}/radars/
+
+Output:
+  - direct_matches: [radars with relevance >= 0.6]
+  - peripheral_matches: [radars with relevance 0.3-0.59]
+  - no_matches: [radars with relevance < 0.3]
+  - no_radar_match: boolean
 ```
 
-Record matches with the triggering keyword.
+This replaces keyword matching with LLM-based semantic analysis. The skill evaluates each radar's **Focus** and **Questions** against the query to determine semantic relevance.
 
-#### 2c: Load Mapped Signals
+**Match Classification:**
+- **Direct match** (relevance >= 0.6): Load all signals from this radar
+- **Peripheral match** (relevance 0.3-0.59): Include in graph traversal
+- **No match** (relevance < 0.3): Exclude unless reached via graph traversal
 
-For each radar with a direct match:
+#### 2b: Load Signals from Direct Matches
 
-1. Read the `Signal Mappings` table
+For each radar in `direct_matches`:
+
+1. Read the radar file's `Signal Mappings` table
 2. Load each mapped signal file from `{user-vault}/signals/`
-3. Extract signal content for STM
+3. Extract full signal content for STM
+4. Track which radars each signal belongs to (for graph traversal)
 
-#### 2d: Peripheral Matching
+```
+loaded_radars = set()
+loaded_signals = set()
+signal_to_radars = {}  # signal_path → [radar1, radar2, ...]
 
-For each radar that did NOT have a direct match:
+for radar in direct_matches:
+    loaded_radars.add(radar.name)
+    for signal_path in radar.signal_mappings:
+        signal_content = read_signal(signal_path)
+        loaded_signals.add(signal_path)
+        signal_to_radars[signal_path] = get_radars_for_signal(signal_path)
+```
 
-1. Check if any of its mapped signals are also mapped to a direct-matched radar
-2. If yes, include as peripheral match
+#### 2c: Graph Traversal for Related Signals
+
+**Purpose**: Discover additional relevant context by following signal relationships across radars.
+
+**Algorithm**: Breadth-first traversal with depth limit
+
+```
+MAX_DEPTH = 3
+current_depth = 1
+
+while current_depth <= MAX_DEPTH:
+    new_radars_to_explore = set()
+
+    # For each loaded signal, find other radars that reference it
+    for signal_path in loaded_signals:
+        for radar_name in signal_to_radars[signal_path]:
+            if radar_name not in loaded_radars:
+                new_radars_to_explore.add(radar_name)
+
+    # Load signals from newly discovered radars
+    for radar_name in new_radars_to_explore:
+        radar = read_radar(radar_name)
+        loaded_radars.add(radar_name)
+
+        for signal_path in radar.signal_mappings:
+            if signal_path not in loaded_signals:
+                signal_content = read_signal(signal_path)
+                loaded_signals.add(signal_path)
+                signal_to_radars[signal_path] = get_radars_for_signal(signal_path)
+
+    # Stop if no new radars discovered
+    if len(new_radars_to_explore) == 0:
+        break
+
+    current_depth += 1
+```
+
+**Example Traversal:**
+
+```
+Query: "Help me build something AI-powered"
+
+Depth 0: Semantic analysis
+  → Direct: AI/Intelligence (0.9), Innovation (0.7)
+  → Peripheral: Purpose (0.5), Technology (0.4)
+
+Depth 1: Load signals from AI/Intelligence, Innovation
+  → 18 signals loaded
+  → augmentation-principle.md → also in Leadership, Purpose
+  → pcam-framework.md → also in Architecture
+  → v-bounce-model.md → also in Innovation (already loaded)
+
+Depth 2: Load signals from Leadership, Purpose, Architecture
+  → 15 more signals loaded
+  → flywheel.md → also in Purpose (already loaded)
+  → composability.md → also in Architecture (already loaded)
+
+Depth 3: No new radars discovered
+  → Stop traversal
+
+Result: 6 radars explored, 33 signals loaded
+```
+
+#### 2d: Classify Match Types for Reporting
+
+After graph traversal, classify radars for context.md:
+
+```
+For each loaded radar:
+  If radar in direct_matches:
+    → type: "direct"
+    → confidence: semantic_relevance_score
+    → trigger: matched_aspects
+  Else if radar in peripheral_matches:
+    → type: "peripheral"
+    → confidence: 0.4
+    → trigger: "semantic relevance" + matched_aspects
+  Else:
+    → type: "graph_traversal"
+    → confidence: 0.3
+    → trigger: "discovered via signal: {signal_name}"
+```
 
 #### 2e: No Match Handling
 
 ```
-If no radar has direct OR peripheral match:
+If semantic analysis returned no_radar_match == true:
   → Set flag: no_radar_match = true
   → This will trigger clarify intent
+  → Skip graph traversal (no starting point)
 ```
 
 ---
@@ -130,17 +219,19 @@ Write matched content to `context.md`:
 ## Query
 
 **Raw**: {verbatim query}
-**Tokenized**: {list of significant terms}
+**Analysis**: {brief 1-line semantic interpretation}
 
 ---
 
 ## Radar Matches
 
-### Direct Matches
+### Direct Matches (Semantic Relevance >= 0.6)
 
 #### {Radar Name} (confidence: {score})
 
-**Matched keyword**: {the keyword that triggered the match}
+**Match type**: Semantic direct match
+**Reasoning**: {1-2 sentence explanation from semantic analysis}
+**Matched aspects**: {list of aspects from semantic analysis}
 **Source**: @{user-vault}/radars/{radar-file}.md
 
 **Radar questions**:
@@ -157,30 +248,58 @@ Write matched content to `context.md`:
 
 ---
 
-### Peripheral Matches
+### Related Radars (Graph Traversal)
 
-#### {Radar Name} (confidence: {score})
+#### {Radar Name} (confidence: 0.3)
 
-**Match reason**: {shared signal with direct-matched radar}
+**Match type**: Discovered via graph traversal
+**Discovery path**: Via signal "{signal_name}" from {source_radar}
+**Source**: @{user-vault}/radars/{radar-file}.md
 
 **Signals loaded**:
-- {signal title} (shared with {radar})
+
+##### {Signal Title}
+**Path**: @{user-vault}/signals/{path}
+
+{Full signal content}
+
+---
+
+### Peripheral Matches (Not Loaded)
+
+These radars had semantic relevance 0.3-0.59 but were not reached via graph traversal:
+
+#### {Radar Name} (confidence: {score})
+**Reasoning**: {explanation}
 
 ---
 
 ### No Matches
 
-{List radars with no match}
+These radars had semantic relevance < 0.3:
+
+- {Radar Name} (relevance: {score})
 
 ---
 
 ## Match Summary
 
-| Radar | Match Type | Confidence | Trigger |
-|-------|------------|------------|---------|
-| AI/Intelligence | direct | 0.9 | "AI-powered" |
-| Digital Experience | peripheral | 0.4 | shared signal |
-| Innovation | none | - | - |
+| Radar | Match Type | Confidence | Method |
+|-------|------------|------------|--------|
+| AI/Intelligence | direct | 0.9 | Semantic: "AI-powered" |
+| Innovation | direct | 0.7 | Semantic: "build something" |
+| Leadership | graph_traversal | 0.3 | Via augmentation-principle.md |
+| Purpose | peripheral | 0.5 | Not reached (semantic only) |
+| Technology | none | 0.2 | Below threshold |
+
+---
+
+## Traversal Statistics
+
+**Depth reached**: {max_depth}
+**Radars loaded**: {count}
+**Signals loaded**: {count}
+**Graph traversal stops**: {reason}
 ```
 
 ---
@@ -210,10 +329,14 @@ Write to `state.md`:
 
 ## Radar Scan Results
 
-**Direct matches**: {count}
-**Peripheral matches**: {count}
+**Semantic analysis**: complete
+**Direct matches**: {count} (relevance >= 0.6)
+**Graph traversal matches**: {count} (discovered via signals)
+**Peripheral matches**: {count} (relevance 0.3-0.59, not loaded)
+**No matches**: {count} (relevance < 0.3)
 **Signals loaded**: {count}
 **No match flag**: {true|false}
+**Traversal depth**: {max_depth reached}
 
 ---
 
@@ -274,9 +397,13 @@ Write to `intents.md`:
 ## Success Criteria
 
 - [ ] STM workspace directory created (with outputs/ and evidence/ subdirectories)
-- [ ] All radar files scanned for keyword matches
-- [ ] Mapped signals loaded for matched radars
-- [ ] Signal content extracted to context.md
+- [ ] Semantic query analysis invoked (`phoenix-vault-analyze-query-semantics`)
+- [ ] All radars analyzed for semantic relevance (0.0-1.0 scores)
+- [ ] Direct match signals loaded (relevance >= 0.6)
+- [ ] Graph traversal completed (depth <= 3)
+- [ ] Related radar signals loaded via graph traversal
+- [ ] Signal content extracted to context.md with match types
+- [ ] Traversal statistics recorded
 - [ ] Initial state captured in state.md
 - [ ] Intent state initialized in intents.md
 
@@ -285,12 +412,16 @@ Write to `intents.md`:
 | Error | Action |
 |-------|--------|
 | Cannot create workspace | Fail recipe, surface to user |
+| Semantic analysis skill fails | Fall back to keyword matching, log warning |
 | Radar file missing | Warn, skip that radar, continue |
 | Signal file missing | Warn, note in context, continue |
 | No radar matches at all | Set flag, proceed (clarify will handle) |
+| Graph traversal depth exceeded | Stop at MAX_DEPTH, log statistics |
+| Circular signal references | Detect cycles, skip already-loaded signals |
 | Prior session conflict | Prompt user: resume or start fresh |
 
 ---
 
-**Version**: 3.0.0
+**Version**: 4.0.0
 **Last Updated**: 2026-01-05
+**Changes**: Replaced keyword matching with semantic analysis + graph traversal

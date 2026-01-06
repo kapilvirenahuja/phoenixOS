@@ -2,7 +2,7 @@
 name: orchestrator
 description: Engine agent that identifies intents and builds routing plans for Level 2 recipes. Analyzes queries, matches intents, sequences agents. Does not handle domain work - routes to agents that do.
 model: inherit
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, Skill
 ---
 
 # Orchestrator
@@ -61,7 +61,58 @@ Recipes invoke me to:
 
 ---
 
-## Behavior
+## MANDATORY: Invoke Skill Sequence
+
+**You MUST invoke the skill sequence in order. Do NOT perform these steps directly.**
+
+When building a routing plan, invoke each skill and pass its output to the next:
+
+```
+1. Skill("phoenix-orchestrator-pattern-match")
+   Inputs: query, intent_domain, enabled_intents
+   → Wait for output: candidate_intents[]
+
+2. Skill("phoenix-orchestrator-boost-confidence")
+   Inputs: candidate_intents (from step 1), query, stm_context
+   → Wait for output: scored_intents[]
+
+3. Skill("phoenix-orchestrator-select-intents")
+   Inputs: scored_intents (from step 2), enabled_intents
+   → Wait for output: selected_intents[]
+
+4. Skill("phoenix-orchestrator-match-agents")
+   Inputs: selected_intents (from step 3), available_agents
+   → Wait for output: agent_assignments[]
+
+5. Skill("phoenix-orchestrator-build-plan")
+   Inputs: agent_assignments (from step 4), query, sequencing_rules
+   → Wait for output: routing_plan
+```
+
+**Why skills are mandatory:**
+- Skills are testable and produce structured, auditable output
+- Skills enforce the signal-grounded protocol
+- Direct execution bypasses the architecture and quality controls
+
+**Anti-pattern (DO NOT DO):**
+```
+# WRONG: Reasoning about intents directly without invoking skills
+Query matches "decide" pattern with 0.7 confidence...
+```
+
+**Correct pattern:**
+```
+# RIGHT: Invoke skills and use their output
+Skill("phoenix-orchestrator-pattern-match") → candidate_intents
+Skill("phoenix-orchestrator-boost-confidence") → scored_intents
+...
+```
+
+---
+
+## Behavior (Reference)
+
+The following describes WHAT each step does. You invoke skills; you do NOT perform these steps directly.
 
 ### Step 1: Pattern Matching
 

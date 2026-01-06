@@ -66,18 +66,92 @@ Agent: `phoenix:strategy-guardian`
 
 ### Framing Structure
 
-**Goal**: Resolve ambiguity before proceeding
+**Goal**: Resolve ambiguity and deliver strategic framing
 
-**Question shapes**:
+**Question shapes** (used to gather information):
 - "What specifically...?" — narrow scope
 - "Who/what/when/where...?" — fill gaps
 - "What does [term] mean to you?" — define terms
 - "What would success look like?" — clarify outcomes
 
-**Success criteria**: User provides concrete specifics that enable next intent
+**Input complete when**: User provides concrete specifics for WHAT, WHO, WHY, and CONSTRAINTS
+
+---
+
+### Output Schema
+
+**Required Deliverables**:
+1. `resolved_request` — Structured summary of what user wants (WHAT, WHO, WHY, CONSTRAINTS)
+2. `strategic_framing` — CTO perspective on what this means (not echoing input, adding insight)
+3. `key_decisions` — Trade-offs or choices that will shape the approach
+4. `recommended_action` — ONE concrete next step the user can take
+
+**Output Format**:
+
+```markdown
+## Strategic Brief: {one-line summary}
+
+### What You're Building
+
+| Dimension | Value |
+|-----------|-------|
+| WHAT | {description of what to build/do} |
+| WHO | {target users/customers} |
+| WHY | {problem being solved + success metric} |
+| CONSTRAINTS | {limitations, requirements, boundaries} |
+
+### Strategic Framing
+
+{CTO perspective — what this really means, what the core challenge is,
+what matters most. NOT just echoing the user's input back.}
+
+### Key Decisions Ahead
+
+1. **{Decision 1}**: {Option A} vs {Option B}
+   - {Why this matters}
+2. **{Decision 2}**: {Option A} vs {Option B}
+   - {Why this matters}
+
+### Recommended First Action
+
+{Concrete, specific step the user can take immediately.
+NOT "let me know if you want..." but "Start by doing X, specifically Y."}
+```
+
+---
+
+### Completion Criteria
+
+Output is complete when:
+- All 4 dimensions (WHAT, WHO, WHY, CONSTRAINTS) are documented
+- Strategic framing adds insight beyond user input
+- At least 1 key decision is identified
+- Recommended action is specific and immediately actionable
+
+**No user interaction during execution.** Agent executes until output is complete.
+
+---
+
+### Routing
+
+After output is delivered, present routing options to user:
+
+```
+### What's Next?
+
+- **[Design]** — Get technical architecture guidance
+- **[Validate]** — Stress-test this approach
+- **[Decide]** — Help choose between specific options
+- **[Done]** — I have what I need
+```
+
+**Routing rules**:
+- User selects next intent (no auto-routing)
+- If user selects [Done], conversation ends with deliverable
+- Future: Auto-route based on learned user preferences
 
 ### Related Intents
-- **evolves_to**: `design`, `validate`, `decide`, `consult`, or `advise` (once clarified)
+- **evolves_to**: `design`, `validate`, `decide`, `consult`, or `advise` (user choice)
 - **requires_first**: None (this IS the first step)
 - **conflicts_with**: All others (clarify must resolve first)
 
@@ -320,5 +394,6 @@ When multiple intents could match, use this priority:
 
 ---
 
-**Version**: 3.0.0
+**Version**: 4.0.0
 **Last Updated**: 2026-01-05
+**Changes**: Added Output Schema to `clarify` intent - intents now define concrete deliverables, not just success criteria
