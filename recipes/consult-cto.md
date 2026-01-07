@@ -28,36 +28,38 @@ Inherits: @memory/engine/flows/recipe-orchestration-pattern.md
 
 ### Step 0: Initialize STM (Automatic)
 
-**Execute `phoenix-context-initialize-stm` skill automatically** with:
+**Execute `phoenix-engine-stm-initialize` skill automatically** with:
 - `recipe_id`: `consult-cto`
 - `signal`: The user's query
+- `vault_path`: `@{user-vault}/` (from Specializations)
 - `user_context`: Any known context
 
 This step:
-1. Scans the query against all 7 radars in `@{user-vault}/radars/`
-2. Loads mapped signals from matched radars into STM `context.md`
-3. Flags `no_radar_match` if no keywords match (triggers clarify)
+1. Discovers radars in `{vault_path}/radars/`
+2. Scans query against discovered radars using semantic relevance
+3. Loads mapped signals from matched radars into STM `context.md`
+4. Flags `no_radar_match` if no radars match (triggers clarify)
 
 Then proceed directly to Step 1 (Build Routing Plan). No human verification required.
 
-### Specializations
+### Configuration
 
-| Specialization | Value |
-|----------------|-------|
-| **Intent Domain** | @memory/engine/intents/cto-intents.md |
-| **Synthesizer** | `phoenix:strategy-guardian` |
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| **Vault Path** | `@{user-vault}/` | Where to find radars and signals |
+| **Synthesizer** | `phoenix:strategy-guardian` | Agent that combines multi-intent outputs |
 
-### Enabled Intents
+### Intent Bindings
 
-This recipe enables the following intents from the CTO domain:
+This recipe binds intents from one or more domains to agents:
 
-| Intent | Agent | Status | Description |
-|--------|-------|--------|-------------|
-| `clarify` | `phoenix:strategy-guardian` | ✅ Active | Resolve ambiguity in vague queries |
-| `decide` | `phoenix:strategy-guardian` | ⏳ Planned | Guide decisions between options |
-| `validate` | `phoenix:strategy-guardian` | ⏳ Planned | Stress-test plans and assumptions |
-| `consult` | `phoenix:strategy-guardian` | ⏳ Planned | Provide guidance on specific problems |
-| `advise` | `phoenix:advisor` | ⏳ Planned | Offer strategic perspective and counsel |
+| Intent | Domain | Agent | Status |
+|--------|--------|-------|--------|
+| `clarify` | `@memory/engine/intents/cto-intents.md` | `phoenix:strategy-guardian` | ✅ Active |
+| `decide` | `@memory/engine/intents/cto-intents.md` | `phoenix:strategy-guardian` | ⏳ Planned |
+| `validate` | `@memory/engine/intents/cto-intents.md` | `phoenix:strategy-guardian` | ⏳ Planned |
+| `consult` | `@memory/engine/intents/cto-intents.md` | `phoenix:strategy-guardian` | ⏳ Planned |
+| `advise` | `@memory/engine/intents/cto-intents.md` | `phoenix:advisor` | ⏳ Planned |
 
 **Phase 1 scope:** `clarify` only (via `strategy-guardian`)
 
@@ -87,45 +89,6 @@ How this recipe navigates roadblocks for each intent:
 | Conflicting requirements | Surface the conflict explicitly; ask user to prioritize or accept trade-offs |
 | User doesn't understand questions | Rephrase with examples; use analogies from user's domain if known |
 | No radar match | Ask user to provide more context about the domain/topic |
-
-#### `decide` Roadblocks
-
-| Roadblock | Resolution Strategy |
-|-----------|---------------------|
-| Missing decision criteria | Ask for constraints, timeline, stakeholders; if unavailable, provide framework for user to evaluate |
-| Too many options | Help narrow by eliminating obviously poor fits; focus on top 2-3 |
-| Conflicting stakeholder priorities | Map stakeholders to priorities; recommend alignment conversation before deciding |
-| No clear trade-offs visible | Research and surface trade-offs; present comparison matrix |
-| Decision already made (seeking validation) | Recognize intent shift; route to `validate` instead |
-
-#### `validate` Roadblocks
-
-| Roadblock | Resolution Strategy |
-|-----------|---------------------|
-| Incomplete plan details | Request specific sections; validate what's available, flag gaps |
-| Plan too abstract | Ask for concrete examples or specifics; validate at the level of detail provided |
-| No success criteria defined | Help define success criteria first; then validate against them |
-| Plan keeps changing | Pause validation; ask user to stabilize scope before continuing |
-| Missing constraints/context | Ask about scale, timeline, team, budget; validate with stated assumptions |
-
-#### `consult` Roadblocks
-
-| Roadblock | Resolution Strategy |
-|-----------|---------------------|
-| Problem too broad | Break into sub-problems; tackle one at a time |
-| Problem outside CTO domain | Acknowledge boundary; provide what guidance is possible, recommend specialist |
-| User already tried obvious solutions | Go deeper; ask what was tried, why it failed, explore root cause |
-| Conflicting constraints | Surface the conflict; help user see what must give |
-| Lack of technical context | Ask about stack, architecture, team skills; advise with stated assumptions |
-
-#### `advise` Roadblocks (⏳ Planned)
-
-| Roadblock | Resolution Strategy |
-|-----------|---------------------|
-| Insufficient context about situation | Ask about industry, stage, constraints; provide general perspective if specifics unavailable |
-| Question too speculative | Acknowledge uncertainty; provide range of scenarios rather than single prediction |
-| Topic outside expertise | State limitation; provide perspective on adjacent areas, recommend research |
-| Rapidly evolving area | Caveat that guidance may have short shelf-life; recommend staying updated |
 
 ---
 

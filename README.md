@@ -16,12 +16,41 @@ Phoenix OS is an **operating system for AI-powered development**. Like an OS orc
 ### Core Flow
 
 ```
-Signal → Recipe → Sub-Agent(s) → Skill(s) → Execute
-                       ↓
-                 Read Memory (STM + LTM)
-                       ↓
-                 Build Context → Output
+                              RECIPE
+                                │
+            ┌───────────────────┼───────────────────┐
+            ▼                   ▼                   ▼
+      ┌──────────┐       ┌──────────┐        ┌──────────┐
+      │  Step 0  │       │  Step 1  │        │  Step 2  │
+      │  STM     │──────▶│  Intent  │───────▶│  Agent   │
+      │  Init    │       │  ID      │        │  Dispatch│
+      └──────────┘       └──────────┘        └──────────┘
+            │                 │                   │
+            │ Skill           │ Skill             │ Agent
+            ▼                 ▼                   ▼
+    ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+    │ stm-initialize│  │identify-intents│ │strategy-guard.│
+    │               │  │ build-plan    │  │               │
+    │ Reads: Vault  │  │ Reads: Engine │  │ Reads: Engine │
+    │ Writes: STM   │  │ Writes: STM   │  │ Reads: STM    │
+    └───────────────┘  └───────────────┘  └───────────────┘
+                                                  │
+                                                  │ Skill Chain
+                                                  ▼
+                                          ┌───────────────┐
+                                          │ PCAM Skills   │
+                                          │ analyze →     │
+                                          │ generate →    │
+                                          │ evaluate      │
+                                          └───────────────┘
 ```
+
+**Key mechanics:**
+- **Recipe** controls execution steps (Step 0 → Step 1 → Step 2)
+- **Step 0** initializes STM: scans Vault radars, loads signals
+- **Step 1** identifies intent via skill, builds routing plan
+- **Step 2** dispatches to Agent who reads Engine + STM, invokes skill chain
+- **Agents** never access Vault directly — signals are pre-loaded to STM
 
 ### AI-Native SDLC
 
@@ -39,11 +68,25 @@ DISCOVER ──► SPECIFY ──► DESIGN ──► BUILD ──► RUN
 
 | Component | Role |
 |-----------|------|
-| **Signals** | Perception layer - user prompts, schedules, webhooks |
-| **Recipes** | Pre-defined workflows through SDLC steps |
-| **Sub-Agents** | Autonomous Keepers that steward domains |
-| **Skills** | Bounded, deterministic capabilities |
-| **Memory** | Organizational brain - STM (session) + LTM (persistent) |
+| **Recipe** | Execution contract - defines what should happen, inherits orchestration patterns |
+| **Intent** | Classification unit - what the user wants (clarify, decide, validate, etc.) |
+| **Agent** | Execution unit - handles domain-specific work via skill chains |
+| **Skill** | Atomic capability - bounded, deterministic, single-responsibility operations |
+| **Memory** | Three-layer system: Engine (mechanics), Vault (knowledge), STM (runtime) |
+| **Orchestration** | Control flow pattern - routes intents to agents, manages response gates |
+
+### Memory Architecture
+
+```
+memory/
+├── engine/         # Phoenix OS mechanics (intents, flows, schemas)
+└── vault/          # User's knowledge base
+    ├── radars/     # Classification lenses (keywords + mappings)
+    └── signals/    # Actual content (mental models, practices)
+
+.phoenix-os/
+└── stm/            # Runtime workspace (ephemeral, per-session)
+```
 
 ## Agent Types
 
@@ -52,8 +95,14 @@ DISCOVER ──► SPECIFY ──► DESIGN ──► BUILD ──► RUN
 - **Specialists** (`{domain}-{action}er`) - bug-analyzer, code-reviewer
 - **High-Order** (`{domain}-guardian`) - standards-guardian, pattern-alchemist
 
-## Philosophy
+## Documentation
 
+### Architecture
+- [Data Flow: consult-cto](philosophy/data-flow-consult-cto.md) - Complete execution trace showing component interactions
+- [Orchestration Engine](philosophy/components/orchestration-engine.md) - Core orchestration mechanics
+- [Recipe Orchestration](philosophy/components/recipe-orchestration.md) - Level 2 recipe patterns
+
+### Philosophy
 - [Philosophy](philosophy/philosophy.md) - Fluidic SDLC and core tenets
 - [Principles](philosophy/principles.md) - Design principles and component specs
 - [Naming Conventions](philosophy/naming-conventions.md) - Standards for recipes, agents, skills
