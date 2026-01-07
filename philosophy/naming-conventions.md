@@ -174,49 +174,41 @@ phoenix:tech-lead
 | Aspect | Convention | Rationale |
 |--------|------------|-----------|
 | **File Case** | `kebab-case.md` | Consistent file naming |
-| **Invocation** | `{domain}-{action}` | Namespace + verb pattern |
-| **Location** | `core/commands/phoenix/{domain}/` | Domain-based grouping |
+| **Invocation** | `phoenix-{pcam-domain}-{action}` | PCAM namespace + verb pattern |
+| **Location** | `skills/{skill-name}/SKILL.md` | Flat structure with folder per skill |
 
 ### Pattern Structure
 
 ```
-{domain}-{action}[-{target}]
+phoenix-{pcam-domain}-{action}[-{target}]
 
-domain = capability area (phoenix-context, phoenix-orchestrator, consult, impl, bug, test, deploy, review)
-action = imperative verb (initialize, analyze, match, fetch, create, apply, execute)
-target = optional object (stm, request, issue, pr, branch)
+pcam-domain = PCAM layer (perception, cognition, manifestation, engine)
+action = imperative verb (analyze, evaluate, generate, initialize, update, identify, build)
+target = optional object (request, understanding, questions, stm, intents, plan)
 ```
 
-**Note**: Skills use hyphen separation throughout. The `phoenix-` prefix denotes system-level skills.
+**Note**: Skills use hyphen separation throughout. The `phoenix-` prefix denotes system-level skills. Skills are namespaced by PCAM domain.
 
-### Domain Categories
+### PCAM Domain Categories
 
 | Domain | Description | Examples |
 |--------|-------------|----------|
-| `phoenix-context` | Memory and context management | STM initialization, updates, intent identification |
-| `phoenix-orchestrator` | Intent detection and routing | Pattern matching, confidence boosting, plan building |
-| `consult` | Consultation and clarification | Request analysis, requirements clarification, synthesis |
-| `impl` | Implementation and coding | Code, commits, design |
-| `bug` | Bug analysis and fixing | RCA, fix application |
-| `test` | Testing operations | Unit, integration, E2E |
-| `deploy` | Deployment and releases | Release, rollback |
-| `review` | Code review operations | PR review, feedback |
+| `phoenix-perception` | Understanding inputs, analyzing requests | Request analysis, complexity detection |
+| `phoenix-cognition` | Reasoning and evaluation | Response evaluation, completeness scoring |
+| `phoenix-manifestation` | Producing outputs | Question generation, synthesis |
+| `phoenix-engine` | System infrastructure | STM management, intent identification, plan building |
 
 ### Examples
 
 | Skill Name | Directory | Description |
 |------------|-----------|-------------|
-| `phoenix-context-initialize-stm` | `phoenix-context-initialize-stm/` | Initialize STM workspace, load signals |
-| `phoenix-context-update-stm` | `phoenix-context-update-stm/` | Update STM after user response |
-| `phoenix-context-identify-intent` | `phoenix-context-identify-intent/` | Re-evaluate intent mid-execution |
-| `phoenix-orchestrator-pattern-match` | `phoenix-orchestrator-pattern-match/` | Match query against intent patterns |
-| `phoenix-orchestrator-boost-confidence` | `phoenix-orchestrator-boost-confidence/` | Apply context signals to refine scores |
-| `phoenix-orchestrator-select-intents` | `phoenix-orchestrator-select-intents/` | Apply thresholds, resolve dependencies |
-| `phoenix-orchestrator-match-agents` | `phoenix-orchestrator-match-agents/` | Map intents to available agents |
-| `phoenix-orchestrator-build-plan` | `phoenix-orchestrator-build-plan/` | Construct routing plan |
-| `consult-analyze-request` | `consult-analyze-request/` | Analyze request for complexity/vagueness |
-| `consult-clarify-requirements` | `consult-clarify-requirements/` | Generate signal-grounded questions |
-| `consult-synthesize-response` | `consult-synthesize-response/` | Consolidate information into synthesis |
+| `phoenix-perception-analyze-request` | `phoenix-perception-analyze-request/` | Analyze request for complexity/vagueness |
+| `phoenix-manifestation-generate-questions` | `phoenix-manifestation-generate-questions/` | Generate signal-grounded clarifying questions |
+| `phoenix-cognition-evaluate-understanding` | `phoenix-cognition-evaluate-understanding/` | Evaluate response completeness |
+| `phoenix-engine-stm-initialize` | `phoenix-engine-stm-initialize/` | Initialize STM workspace, load signals |
+| `phoenix-engine-stm-update` | `phoenix-engine-stm-update/` | Update STM after user response |
+| `phoenix-engine-identify-intents` | `phoenix-engine-identify-intents/` | Pattern match, boost confidence, select intents |
+| `phoenix-engine-build-plan` | `phoenix-engine-build-plan/` | Map to agents, construct routing plan |
 
 ### Rules
 
@@ -230,12 +222,12 @@ target = optional object (stm, request, issue, pr, branch)
 
 | Avoid | Prefer | Reason |
 |-------|--------|--------|
-| `runTests` | `test-execute` | Use domain prefix with hyphen |
-| `fetchIssue` | `plan-fetch-issue` | Use kebab-case with domain |
-| `doCommit` | `impl-commit` | Remove unnecessary "do" |
-| `helper:util` | `impl-format-code` | Be specific, avoid generic |
-| `create_pr` | `impl-create-pr` | No underscores, use hyphens |
-| `plan:fetch` | `plan-fetch-issue` | Use hyphen, not colon |
+| `runTests` | `phoenix-engine-run-tests` | Use PCAM domain prefix with hyphen |
+| `consult-analyze-request` | `phoenix-perception-analyze-request` | Use PCAM namespace |
+| `doCommit` | `phoenix-engine-commit` | Remove unnecessary "do" |
+| `helper:util` | `phoenix-engine-format-code` | Be specific, avoid generic |
+| `create_pr` | `phoenix-engine-create-pr` | No underscores, use hyphens |
+| `plan:fetch` | `phoenix-engine-fetch-issue` | Use hyphen, not colon |
 
 ---
 
@@ -249,7 +241,7 @@ target = optional object (stm, request, issue, pr, branch)
 | **Agent (Specialist)** | `{domain}-{action}er` | `bug-analyzer` | `phoenix:bug-analyzer` |
 | **Agent (High-Order)** | `{domain}-guardian` | `strategy-guardian` | `phoenix:strategy-guardian` |
 | **Agent (Engine)** | `orchestrator` | `orchestrator` | `phoenix:orchestrator` |
-| **Skill** | `{domain}-{action}` | `consult-analyze-request` | `consult-analyze-request` |
+| **Skill** | `phoenix-{pcam-domain}-{action}` | `phoenix-perception-analyze-request` | `phoenix-perception-analyze-request` |
 
 ---
 
@@ -278,8 +270,8 @@ Is it a workflow that orchestrates multiple agents?
          │         └─► High-order governance? → {domain}-guardian
          │             Example: strategy-guardian, standards-guardian
          │
-         └─► NO → Skill: {domain}-{action}
-                  Example: consult-analyze-request, phoenix-context-initialize-stm
+         └─► NO → Skill: phoenix-{pcam-domain}-{action}
+                  Example: phoenix-perception-analyze-request, phoenix-engine-stm-initialize
 ```
 
 ---

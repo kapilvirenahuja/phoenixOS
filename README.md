@@ -16,40 +16,59 @@ Phoenix OS is an **operating system for AI-powered development**. Like an OS orc
 ### Core Flow
 
 ```
-                              RECIPE
-                                │
-            ┌───────────────────┼───────────────────┐
-            ▼                   ▼                   ▼
-      ┌──────────┐       ┌──────────┐        ┌──────────┐
-      │  Step 0  │       │  Step 1  │        │  Step 2  │
-      │  STM     │──────▶│  Intent  │───────▶│  Agent   │
-      │  Init    │       │  ID      │        │  Dispatch│
-      └──────────┘       └──────────┘        └──────────┘
-            │                 │                   │
-            │ Skill           │ Skill             │ Agent
-            ▼                 ▼                   ▼
-    ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-    │ stm-initialize│  │identify-intents│ │strategy-guard.│
-    │               │  │ build-plan    │  │               │
-    │ Reads: Vault  │  │ Reads: Engine │  │ Reads: Engine │
-    │ Writes: STM   │  │ Writes: STM   │  │ Reads: STM    │
-    └───────────────┘  └───────────────┘  └───────────────┘
-                                                  │
-                                                  │ Skill Chain
-                                                  ▼
-                                          ┌───────────────┐
-                                          │ PCAM Skills   │
-                                          │ analyze →     │
-                                          │ generate →    │
-                                          │ evaluate      │
-                                          └───────────────┘
+Signal → Recipe → Orchestrator → Agent → Output
+                       ↓            ↓
+                    Memory       Router → Skill Chain
+                       ↓
+                   Context
+```
+
+**Expanded:**
+
+```
+Signal (user query)
+    │
+    ▼
+Recipe
+    │
+    ├── Intent Bindings: intent → agent mapping
+    │
+    ▼
+Orchestrator
+    │
+    ├── Memory ──────────────────┐
+    │   ├── Engine (how)         │
+    │   └── Vault (what)         │
+    │            │               │
+    │            ▼               │
+    │        Context (STM)  ◄────┘
+    │
+    ├── Step 0: Load signals
+    ├── Step 1: Detect intent → Build plan
+    └── Step 2: Dispatch
+                │
+                ▼
+Agent
+    │
+    ├── Goal: What this agent does
+    │
+    ├── Router (analyze input)
+    │       │
+    │       ├── confidence < 0.8 → clarify first
+    │       │
+    │       └── confidence ≥ 0.8 → Skill Chain
+    │
+    ▼
+Output
+    │
+    └── complete | blocked | needs_clarification
 ```
 
 **Key mechanics:**
-- **Recipe** controls execution steps (Step 0 → Step 1 → Step 2)
-- **Step 0** initializes STM: scans Vault radars, loads signals
-- **Step 1** identifies intent via skill, builds routing plan
-- **Step 2** dispatches to Agent who reads Engine + STM, invokes skill chain
+- **Recipe** maps intents to agents (WHO does the work)
+- **Orchestrator** builds context from Memory, detects intent, routes to agent
+- **Agent** has a goal, routes input to skill chain (HOW to do the work)
+- **Confidence gate** ensures agents only execute when confident (≥ 0.8)
 - **Agents** never access Vault directly — signals are pre-loaded to STM
 
 ### AI-Native SDLC

@@ -1,5 +1,5 @@
 ---
-name: phoenix-context-update-stm
+name: phoenix-engine-stm-update
 description: Update Short-Term Memory after user response. Evaluates new input for context changes, extracts facts, and maintains interaction log. Triggered after every user response during recipe execution.
 ---
 
@@ -12,6 +12,10 @@ Evaluate user response and update STM workspace to maintain accurate context for
 - **Always**: After every user response during recipe execution
 - **Trigger**: Automatic, part of orchestration loop
 - **By**: Recipe (before re-invoking orchestrator)
+
+## PCAM Domain
+
+**Engine** - System infrastructure that supports the PCAM layers.
 
 ## Inputs
 
@@ -158,5 +162,6 @@ If `contradiction` detected:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-01-04
+**Version**: 2.0.0
+**Last Updated**: 2026-01-06
+**Changes**: Renamed from `phoenix-context-update-stm` to `phoenix-engine-stm-update`. Updated to Engine namespace.

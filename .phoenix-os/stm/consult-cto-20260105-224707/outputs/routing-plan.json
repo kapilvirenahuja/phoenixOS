@@ -1,0 +1,43 @@
+{
+  "id": "plan-2026-01-05-mintburn",
+  "created_at": "2026-01-05T22:47:00Z",
+  "query": "what all should i consider when designing mint/burn mechanics for FIFA collect?",
+  "confidence": 1.0,
+  "steps": [
+    {
+      "order": 1,
+      "mode": "sequential",
+      "depends_on": [],
+      "agents": [
+        {
+          "agent": "phoenix:strategy-guardian",
+          "intent": "design",
+          "goal": "Guide user on considerations for designing mint/burn tokenomics mechanics for FIFA Collect",
+          "inputs": {
+            "user_needs": "Comprehensive guidance on mint/burn mechanics design considerations for a digital collectibles platform (FIFA Collect)",
+            "expects": "Structured framework covering tokenomics, supply mechanics, user incentives, technical implementation considerations, and strategic tradeoffs",
+            "probe_for": [
+              "Current understanding of mint/burn mechanics goals",
+              "Supply model preferences (deflationary, inflationary, elastic)",
+              "User incentive alignment requirements",
+              "Integration with existing FIFA Collect mechanics"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "synthesizer": {
+    "agent": "phoenix:strategy-guardian",
+    "inputs": {
+      "consolidate_from": ["design"],
+      "output_format": "strategic_brief"
+    }
+  },
+  "metadata": {
+    "intent_domain": "@memory/engine/intents/cto-intents.md",
+    "primary_intent": "design",
+    "secondary_intent_deferred": "advise",
+    "replan_count": 0
+  }
+}

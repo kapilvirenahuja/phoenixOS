@@ -43,20 +43,13 @@ Recipes invoke me to:
 ## Skill Sequence
 
 ```
-1. phoenix-orchestrator-pattern-match
-   → candidate_intents[]
-
-2. phoenix-orchestrator-boost-confidence
-   → scored_intents[]
-
-3. phoenix-orchestrator-select-intents
+1. phoenix-engine-identify-intents
    → selected_intents[]
+   (Consolidates: pattern matching, confidence boosting, intent selection)
 
-4. phoenix-orchestrator-match-agents
-   → agent_assignments[]
-
-5. phoenix-orchestrator-build-plan
+2. phoenix-engine-build-plan
    → routing_plan
+   (Consolidates: agent matching, plan construction)
 ```
 
 ---
@@ -68,24 +61,12 @@ Recipes invoke me to:
 When building a routing plan, invoke each skill and pass its output to the next:
 
 ```
-1. Skill("phoenix-orchestrator-pattern-match")
-   Inputs: query, intent_domain, enabled_intents
-   → Wait for output: candidate_intents[]
-
-2. Skill("phoenix-orchestrator-boost-confidence")
-   Inputs: candidate_intents (from step 1), query, stm_context
-   → Wait for output: scored_intents[]
-
-3. Skill("phoenix-orchestrator-select-intents")
-   Inputs: scored_intents (from step 2), enabled_intents
+1. Skill("phoenix-engine-identify-intents")
+   Inputs: query, intent_domain_path, enabled_intents, stm_path, mode ("initial")
    → Wait for output: selected_intents[]
 
-4. Skill("phoenix-orchestrator-match-agents")
-   Inputs: selected_intents (from step 3), available_agents
-   → Wait for output: agent_assignments[]
-
-5. Skill("phoenix-orchestrator-build-plan")
-   Inputs: agent_assignments (from step 4), query, sequencing_rules
+2. Skill("phoenix-engine-build-plan")
+   Inputs: selected_intents (from step 1), query, intent_domain_path, available_agents, sequencing_rules_path, synthesizer
    → Wait for output: routing_plan
 ```
 
@@ -103,9 +84,8 @@ Query matches "decide" pattern with 0.7 confidence...
 **Correct pattern:**
 ```
 # RIGHT: Invoke skills and use their output
-Skill("phoenix-orchestrator-pattern-match") → candidate_intents
-Skill("phoenix-orchestrator-boost-confidence") → scored_intents
-...
+Skill("phoenix-engine-identify-intents") → selected_intents
+Skill("phoenix-engine-build-plan") → routing_plan
 ```
 
 ---
@@ -251,11 +231,8 @@ Apply rules from `@memory/engine/intents/sequencing-rules.md`:
 
 | Skill | Purpose | Status |
 |-------|---------|--------|
-| `phoenix-orchestrator-pattern-match` | Match query against intent patterns | ✓ Complete |
-| `phoenix-orchestrator-boost-confidence` | Apply context signals to boost scores | ✓ Complete |
-| `phoenix-orchestrator-select-intents` | Apply thresholds and resolve dependencies | ✓ Complete |
-| `phoenix-orchestrator-match-agents` | Map intents to available agents | ✓ Complete |
-| `phoenix-orchestrator-build-plan` | Construct routing plan per schema | ✓ Complete |
+| `phoenix-engine-identify-intents` | Pattern match, boost confidence, select intents | ✓ Complete |
+| `phoenix-engine-build-plan` | Match agents, construct routing plan | ✓ Complete |
 
 ---
 

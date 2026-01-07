@@ -1,0 +1,41 @@
+{
+  "routing_plan": {
+    "id": "plan-2026-01-07-debug",
+    "created_at": "2026-01-07T10:00:00Z",
+    "query": "Help me build something AI-powered",
+    "confidence": 0.80,
+    "steps": [
+      {
+        "order": 1,
+        "mode": "sequential",
+        "depends_on": [],
+        "agents": [
+          {
+            "agent": "phoenix:strategy-guardian",
+            "intent": "clarify",
+            "goal": "Resolve vague 'AI-powered something' into concrete requirements",
+            "inputs": {
+              "user_needs": "Clear understanding of WHAT, WHO, WHY, CONSTRAINTS",
+              "expects": "Strategic Brief with resolved requirements",
+              "probe_for": [
+                "What specific problem are you solving?",
+                "Who experiences this problem?",
+                "Why do you believe AI is the solution?"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "synthesizer": {
+      "agent": "phoenix:strategy-guardian"
+    }
+  },
+  "selected_intents": [
+    {
+      "intent": "clarify",
+      "confidence": 0.80,
+      "rationale": "Query contains vague terms, buzzword, missing context"
+    }
+  ]
+}

@@ -69,7 +69,7 @@ Recipes that inherit this pattern reference it and define their specializations 
 
 ### Step 0: Initialize STM
 
-**Skill**: `phoenix-context-initialize-stm`
+**Skill**: `phoenix-engine-stm-initialize`
 
 | | |
 |---|---|
@@ -90,7 +90,7 @@ This step runs **once** at recipe start:
 5. Initialize intent state as `pending_identification`
 6. If no radar matches, flag for clarify intent
 
-Reference: @skills/phoenix-context-initialize-stm/SKILL.md
+Reference: @skills/phoenix-engine-stm-initialize/SKILL.md
 Architecture: @memory/engine/vault-architecture.md
 
 **STM Workspace Structure:**
@@ -206,7 +206,7 @@ Once a roadblock is resolved (e.g., user provides clarification):
 
 ### Step 3a: Update STM on User Response
 
-**Skill**: `phoenix-context-update-stm`
+**Skill**: `phoenix-engine-stm-update`
 
 **Trigger**: After **every** user response during recipe execution.
 
@@ -253,7 +253,7 @@ Once a roadblock is resolved (e.g., user provides clarification):
 | {ts} | user_response | {brief summary} |
 ```
 
-Reference: @skills/phoenix-context-update-stm/SKILL.md
+Reference: @skills/phoenix-engine-stm-update/SKILL.md
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

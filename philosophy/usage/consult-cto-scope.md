@@ -33,7 +33,7 @@ User Query
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 0: Initialize STM                                       │
 │                                                              │
-│   Skill: phoenix-context-initialize-stm                      │
+│   Skill: phoenix-engine-stm-initialize                       │
 │   - Create STM workspace structure                           │
 │   - Scan query against radars ({user-vault}/radars/)         │
 │   - Load matched signals into STM context.md                 │
@@ -148,21 +148,22 @@ When multiple intents could match:
 | `agents/ux-architect.md` | `phoenix:ux-architect` | ✗ Missing | design → ux-design |
 | `agents/strategist.md` | `phoenix:strategist` | ✗ Missing | design → strategy-design |
 
-### Skills - Context Domain
+### Skills - Engine Domain
 
 | Skill | File | Status |
 |-------|------|--------|
-| `phoenix-context-initialize-stm` | `skills/phoenix-context-initialize-stm/SKILL.md` | ✓ Complete |
-| `phoenix-context-identify-intent` | `skills/phoenix-context-identify-intent/SKILL.md` | ✓ Complete |
-| `phoenix-context-update-stm` | `skills/phoenix-context-update-stm/SKILL.md` | ✓ Complete |
+| `phoenix-engine-stm-initialize` | `skills/phoenix-engine-stm-initialize/SKILL.md` | ✓ Complete |
+| `phoenix-engine-stm-update` | `skills/phoenix-engine-stm-update/SKILL.md` | ✓ Complete |
+| `phoenix-engine-identify-intents` | `skills/phoenix-engine-identify-intents/SKILL.md` | ✓ Complete |
+| `phoenix-engine-build-plan` | `skills/phoenix-engine-build-plan/SKILL.md` | ✓ Complete |
 
-### Skills - Consult Domain
+### Skills - PCAM Domain (Clarify Intent)
 
 | Skill | File | Status |
 |-------|------|--------|
-| `consult:analyze-request` | `skills/consult/analyze-request/SKILL.md` | ✗ Missing |
-| `consult:clarify-requirements` | `skills/consult/clarify-requirements/SKILL.md` | ✗ Missing |
-| `consult:synthesize-response` | `skills/consult/synthesize-response/SKILL.md` | ✗ Missing |
+| `phoenix-perception-analyze-request` | `skills/phoenix-perception-analyze-request/SKILL.md` | ✓ Complete |
+| `phoenix-manifestation-generate-questions` | `skills/phoenix-manifestation-generate-questions/SKILL.md` | ✓ Complete |
+| `phoenix-cognition-evaluate-understanding` | `skills/phoenix-cognition-evaluate-understanding/SKILL.md` | ✓ Complete |
 
 ### Skills - Validate Domain
 
@@ -220,15 +221,15 @@ When multiple intents could match:
 |----------|----------|-------|----------|
 | Recipe | 1 | 1 | 100% |
 | Agents | 2 | 5 | 40% |
-| Context Skills | 3 | 3 | 100% |
-| Consult Skills | 0 | 3 | 0% |
+| Engine Skills | 4 | 4 | 100% |
+| PCAM Skills (Clarify) | 3 | 3 | 100% |
 | Validate Skills | 0 | 3 | 0% |
 | Advise Skills | 0 | 3 | 0% |
 | Architect Skills | 0 | 4 | 0% |
 | UX Skills | 0 | 3 | 0% |
 | Strategy Skills | 0 | 3 | 0% |
 | Memory (intents) | 2 | 2 | 100% |
-| **Total** | **8** | **30** | **27%** |
+| **Total** | **12** | **30** | **40%** |
 
 ---
 
@@ -240,10 +241,12 @@ Enables `clarify`, `decide`, `validate`, `consult` intents:
 
 **Agents**: None (strategy-guardian exists)
 
-**Skills**:
-1. `consult:analyze-request` - Classify intent, detect vagueness, assess complexity
-2. `consult:clarify-requirements` - Challenge buzzwords, ask focused questions
-3. `consult:synthesize-response` - Create executive summary with next steps
+**Skills** (✓ Complete for clarify):
+1. `phoenix-perception-analyze-request` - ✓ Classify intent, detect vagueness, assess complexity
+2. `phoenix-manifestation-generate-questions` - ✓ Challenge buzzwords, ask focused questions
+3. `phoenix-cognition-evaluate-understanding` - ✓ Evaluate response completeness
+
+**Validate Skills** (Planned):
 4. `validate:challenge-assumptions` - Identify and stress-test implicit assumptions
 5. `validate:detect-antipatterns` - Recognize common failure patterns
 6. `validate:generate-report` - Produce validation report with verdict
@@ -303,31 +306,31 @@ Enables `design` → `strategy-design`:
 ### Clarify Intent
 ```
 User: "I need to scale"
-Flow: initialize-stm → identify-intent(clarify) → strategy-guardian → [consult:clarify-requirements] → synthesize
+Flow: stm-initialize → identify-intents(clarify) → strategy-guardian → [PCAM skill chain] → synthesize
 ```
 
 ### Decide Intent
 ```
 User: "Should I use Postgres or MongoDB?"
-Flow: initialize-stm → identify-intent(decide) → strategy-guardian → [consult + validate skills] → synthesize
+Flow: stm-initialize → identify-intents(decide) → strategy-guardian → [PCAM + validate skills] → synthesize
 ```
 
 ### Validate Intent
 ```
 User: "Is my microservices plan solid?"
-Flow: initialize-stm → identify-intent(validate) → strategy-guardian → [validate skills] → synthesize
+Flow: stm-initialize → identify-intents(validate) → strategy-guardian → [validate skills] → synthesize
 ```
 
 ### Consult Intent
 ```
 User: "Help me with authentication"
-Flow: initialize-stm → identify-intent(consult) → strategy-guardian → [consult skills] → synthesize
+Flow: stm-initialize → identify-intents(consult) → strategy-guardian → [PCAM skills] → synthesize
 ```
 
 ### Advise Intent
 ```
 User: "What's your take on AI agents?"
-Flow: initialize-stm → identify-intent(advise) → advisor → [advise skills] → synthesize
+Flow: stm-initialize → identify-intents(advise) → advisor → [advise skills] → synthesize
 ```
 
 ### Design → Tech-Design

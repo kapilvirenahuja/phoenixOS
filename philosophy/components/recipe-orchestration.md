@@ -97,10 +97,10 @@ Domain agents invoke skill chains, not individual skills:
 
 ```
 Strategy-Guardian (clarify intent):
-  consult-analyze-request → consult-clarify-requirements → consult-synthesize-response
+  phoenix-perception-analyze-request → phoenix-manifestation-generate-questions → phoenix-cognition-evaluate-understanding
 
 Orchestrator (routing):
-  phoenix-orchestrator-pattern-match → ... → phoenix-orchestrator-build-plan
+  phoenix-engine-identify-intents → phoenix-engine-build-plan
 ```
 
 Skills are mandatory. Agents MUST invoke their defined skill chains.

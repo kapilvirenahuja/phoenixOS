@@ -1,51 +1,57 @@
 ---
-name: consult-synthesize-response
-description: Synthesize gathered information into executive summary with clear next steps. Final skill in the clarify chain - consolidates understanding and routes to appropriate next intent.
+name: phoenix-cognition-evaluate-understanding
+description: Evaluate response completeness and consolidate understanding. Cognition domain skill that assesses whether clarification is complete based on intent-defined criteria.
 ---
 
-# Synthesize Response
+# Evaluate Understanding
 
-Consolidate all gathered information into an executive summary, determine the resolved understanding, and route to the appropriate next intent. This is the **synthesis** phase - wrapping up clarification and moving forward.
+Evaluate response completeness, consolidate understanding, and determine if clarification goals are met. This is a **Cognition** domain skill - reasoning about gathered information to assess completeness.
 
 ## When to Use
 
 - **After**: User has responded to clarifying questions
-- **After**: `phoenix-context-update-stm` has captured the response
-- **Trigger**: Clarification round complete, ready to synthesize
-- **By**: `phoenix:strategy-guardian` agent (or designated synthesizer)
+- **After**: `phoenix-engine-stm-update` has captured the response
+- **Trigger**: Clarification round complete, ready to evaluate
+- **By**: Any agent that needs to evaluate understanding completeness
+
+## PCAM Domain
+
+**Cognition** - Reasoning, evaluating, deciding, assessing.
 
 ## Position in Chain
 
 ```
 ┌─────────────────────────────────┐
-│  consult:analyze-request        │
+│  phoenix-perception-            │
+│  analyze-request                │
 └─────────────────────────────────┘
       │
       ▼
 ┌─────────────────────────────────┐
-│  consult:clarify-requirements   │
+│  phoenix-manifestation-         │
+│  generate-questions             │
 └─────────────────────────────────┘
       │
       ▼ questions presented
 ┌─────────────────────────────────┐
 │  User responds                  │
-│  phoenix-context-update-stm     │
+│  phoenix-engine-stm-update      │
 └─────────────────────────────────┘
       │
       ▼ updated STM
 ┌─────────────────────────────────┐
-│  consult:synthesize-response    │  ◄── YOU ARE HERE
-│  (Synthesis: Wrap up and route) │
+│  phoenix-cognition-             │  ◄── YOU ARE HERE
+│  evaluate-understanding         │
+│  (Evaluation: Is it complete?)  │
 └─────────────────────────────────┘
       │
-      ├─────────────────────────────────────────────┐
-      │                                             │
-      ▼ Still vague?                                ▼ Clarified?
-┌─────────────────────────┐           ┌─────────────────────────────┐
-│  Re-run analyze-request │           │  Route to next intent       │
-│  (max 3 rounds)         │           │  (design, decide, validate) │
-└─────────────────────────┘           └─────────────────────────────┘
+      ▼ completeness assessment
+      │
+      │ Orchestrator determines next action inline
+      │ (NOT returned by this skill)
 ```
+
+**Important**: This skill does NOT determine routing. The orchestrator agent reads the completeness assessment and determines the next intent inline.
 
 ---
 
@@ -57,6 +63,8 @@ Consolidate all gathered information into an executive summary, determine the re
 | `stm_path` | Yes | Path to STM workspace (contains all context) |
 | `questions_asked` | Yes | Questions that were presented to user |
 | `user_responses` | Yes | User's responses (from STM context.md) |
+| `intent` | Yes | Current intent (`clarify`, `consult`, `decide`, etc.) |
+| `intent_definition_path` | Yes | Path to intent definition (for completion criteria) |
 | `clarification_round` | Yes | Which round of clarification this is (1, 2, 3) |
 | `max_rounds` | No | Maximum clarification rounds before forcing proceed (default: 3) |
 
@@ -64,7 +72,25 @@ Consolidate all gathered information into an executive summary, determine the re
 
 ## Instructions
 
-### Step 1: Load All Context from STM
+### Step 1: Load Completion Criteria from Intent Definition
+
+Read the intent definition from `intent_definition_path` and extract completion criteria:
+
+```markdown
+### Completion Criteria
+
+Output is complete when:
+- All 4 dimensions (WHAT, WHO, WHY, CONSTRAINTS) are documented
+- Strategic framing adds insight beyond user input
+- At least 1 key decision is identified
+- Recommended action is specific and immediately actionable
+```
+
+Extract required dimensions and criteria for the current intent.
+
+---
+
+### Step 2: Load All Context from STM
 
 Read from STM workspace:
 
@@ -85,7 +111,7 @@ Read from STM workspace:
 
 ---
 
-### Step 2: Evaluate Response Completeness
+### Step 3: Evaluate Response Completeness
 
 For each question that was asked, evaluate if the response adequately addresses it:
 
@@ -111,7 +137,20 @@ completeness = sum(question_scores) / question_count
 
 ---
 
-### Step 3: Extract Resolved Understanding
+### Step 4: Check Required Dimensions (from Intent Definition)
+
+Verify each required dimension from the intent definition is now present:
+
+| Dimension | Required | Status | Source |
+|-----------|----------|--------|--------|
+| WHAT | ✓ | ✅ Present | User response to Q1 |
+| WHO | ✓ | ✅ Present | User response to Q2 |
+| WHY | ✓ | ❌ Partial | User mentioned goal but not success metric |
+| CONSTRAINTS | ✓ | ✅ Present | User response to Q4 |
+
+---
+
+### Step 5: Extract Resolved Understanding
 
 Consolidate what we now know:
 
@@ -127,7 +166,7 @@ Consolidate what we now know:
 | WHAT | [specific target] | User response to Q1 |
 | WHO | [users/customers] | User response to Q2 |
 | WHY | [problem being solved] | User response to Q3 |
-| HOW | [constraints] | User response to Q4 |
+| CONSTRAINTS | [limitations] | User response to Q4 |
 
 ### Assumptions Made
 [List any assumptions we're proceeding with due to incomplete responses]
@@ -138,60 +177,50 @@ Consolidate what we now know:
 
 ---
 
-### Step 4: Determine Next Intent
-
-Based on resolved understanding, identify what the user actually needs:
-
-**Intent Detection from Clarified Request:**
-
-| If clarified request looks like... | Route to Intent |
-|-----------------------------------|-----------------|
-| "Build X for Y users solving Z problem" | `design` |
-| "Choose between X and Y" | `decide` |
-| "Review/validate my plan for X" | `validate` |
-| "I'm stuck on X, help me" | `consult` |
-| "What do you think about X trend" | `advise` |
-| Still too vague after 3 rounds | `consult` (with stated assumptions) |
-
-**Apply intent detection patterns from Engine:**
-
-```
-Read @memory/engine/intents/cto-intents.md
-Match clarified understanding against intent patterns
-Return highest-confidence match
-```
-
----
-
-### Step 5: Check for Re-clarification Need
+### Step 6: Determine Completion Status
 
 **Decision tree:**
 
 ```
+If completeness_score >= 0.8 AND all required dimensions present:
+  → status: clarified
+
+If completeness_score >= 0.5 AND most required dimensions present:
+  → status: proceed_with_assumptions
+  → Document: what we're assuming and why
+
 If completeness_score < 0.5 AND clarification_round < max_rounds:
-  → Return: needs_reclarification
+  → status: needs_reclarification
   → Generate: focused follow-up questions (only for gaps)
 
 If completeness_score < 0.5 AND clarification_round >= max_rounds:
-  → Return: proceed_with_assumptions
-  → Document: what we're assuming and why
+  → status: proceed_with_assumptions
+  → Document: forced proceed, what remains unclear
 
-If completeness_score >= 0.5:
-  → Return: clarified
-  → Route to: next_intent
+If contradiction detected:
+  → status: contradiction_detected
+  → Surface: contradiction details for resolution
 ```
 
 ---
 
-### Step 6: Generate Executive Summary
+### Step 7: Generate Summary
 
 **Summary Structure:**
 
 ```markdown
-## Executive Summary
+## Evaluation Summary
 
 ### What We Understood
 [2-3 sentences capturing the clarified request]
+
+### Dimension Status
+| Dimension | Status | Value |
+|-----------|--------|-------|
+| WHAT | ✅ Complete | AI assistant for customer support |
+| WHO | ✅ Complete | Internal support agents |
+| WHY | ⚠️ Partial | Reduce ticket time (no metric) |
+| CONSTRAINTS | ✅ Complete | Must integrate with Zendesk |
 
 ### Key Insights
 - [Insight 1 from signals + user responses]
@@ -201,22 +230,12 @@ If completeness_score >= 0.5:
 ### Signals Used
 | Signal | How It Applied |
 |--------|----------------|
-| [signal path] | [how it informed questions/understanding] |
-
-### Next Steps
-1. [Immediate next action]
-2. [Following action]
-3. [Future consideration]
-
-### Routing
-**Next Intent**: [design | decide | validate | consult | advise]
-**Agent**: [phoenix:strategy-guardian | phoenix:architect | etc.]
-**Confidence**: [0.0-1.0]
+| [signal path] | [how it informed understanding] |
 ```
 
 ---
 
-### Step 7: Handle Edge Cases
+### Step 8: Handle Edge Cases
 
 **User refuses to clarify:**
 
@@ -224,8 +243,7 @@ If completeness_score >= 0.5:
 If user explicitly refuses ("just do it", "I don't know"):
   → Document refusal
   → State assumptions explicitly
-  → Proceed with stated caveats
-  → Lower confidence in next intent
+  → status: proceed_with_assumptions
 ```
 
 **Contradictions detected:**
@@ -233,7 +251,7 @@ If user explicitly refuses ("just do it", "I don't know"):
 ```markdown
 If user response contradicts earlier statement:
   → Surface contradiction explicitly
-  → Ask user to resolve (this is a mini-clarification)
+  → status: contradiction_detected
   → Do not proceed until resolved
 ```
 
@@ -241,9 +259,9 @@ If user response contradicts earlier statement:
 
 ```markdown
 If user response reveals fundamentally different request:
-  → Flag scope_change = true
-  → Re-run full orchestration from Step 1
-  → Do not synthesize based on original query
+  → Flag scope_changed = true
+  → status: scope_changed
+  → Requires re-running full orchestration
 ```
 
 ---
@@ -252,15 +270,17 @@ If user response reveals fundamentally different request:
 
 | Output | Type | Description |
 |--------|------|-------------|
-| `status` | enum | `clarified` \| `needs_reclarification` \| `proceed_with_assumptions` \| `scope_changed` |
+| `status` | enum | `clarified` \| `needs_reclarification` \| `proceed_with_assumptions` \| `scope_changed` \| `contradiction_detected` |
 | `completeness_score` | float | 0.0-1.0 score of how well questions were answered |
 | `resolved_understanding` | object | Structured understanding of the request |
+| `dimensions_status` | object | Status of each required dimension |
 | `assumptions` | array | Assumptions made due to incomplete answers |
 | `unknowns` | array | Things we couldn't determine |
-| `executive_summary` | string | Markdown summary for presentation |
-| `next_intent` | object | Recommended next intent with confidence |
-| `next_steps` | array | Actionable next steps |
-| `signals_used` | array | Signals that informed the synthesis |
+| `summary` | string | Markdown summary for reference |
+| `signals_used` | array | Signals that informed the evaluation |
+| `follow_up_questions` | array | Only if status = needs_reclarification |
+
+**Note**: This skill does NOT output `next_intent` or routing decisions. The orchestrator agent determines routing inline based on the status.
 
 **Output Schema:**
 
@@ -274,8 +294,14 @@ If user response reveals fundamentally different request:
       "WHAT": "AI assistant for customer support",
       "WHO": "Internal support agents (not customers directly)",
       "WHY": "Reduce ticket resolution time, improve agent efficiency",
-      "HOW": "API-first approach, integrate with existing Zendesk"
+      "CONSTRAINTS": "API-first approach, integrate with existing Zendesk"
     }
+  },
+  "dimensions_status": {
+    "WHAT": {"status": "complete", "value": "AI assistant for customer support"},
+    "WHO": {"status": "complete", "value": "Internal support agents"},
+    "WHY": {"status": "partial", "value": "Reduce ticket time", "gap": "No success metric"},
+    "CONSTRAINTS": {"status": "complete", "value": "Must integrate with Zendesk"}
   },
   "assumptions": [
     "Scale: Assumed <100 agents based on 'small team' mention",
@@ -285,29 +311,14 @@ If user response reveals fundamentally different request:
     "Budget constraints",
     "Specific Zendesk plan/limitations"
   ],
-  "executive_summary": "## Executive Summary\n\n### What We Understood\nYou want to build an AI assistant...",
-  "next_intent": {
-    "intent": "design",
-    "sub_intent": "tech-design",
-    "confidence": 0.9,
-    "agent": "phoenix:architect",
-    "rationale": "User has clear requirements and is ready for architecture guidance"
-  },
-  "next_steps": [
-    "Design the AI assistant architecture (LLM integration pattern)",
-    "Define the Zendesk integration approach",
-    "Prototype with a subset of ticket types"
-  ],
+  "summary": "## Evaluation Summary\n\n### What We Understood\nYou want to build an AI assistant...",
   "signals_used": [
     {
       "path": "@{user-vault}/signals/ai/augmentation-principle.md",
       "usage": "Framed AI as augmenting agent capabilities, not replacing agents"
-    },
-    {
-      "path": "@{user-vault}/signals/ai/llm-integration-patterns.md",
-      "usage": "Informed recommendation to start with RAG for knowledge retrieval"
     }
-  ]
+  ],
+  "follow_up_questions": []
 }
 ```
 
@@ -332,6 +343,7 @@ If another round is needed:
   "follow_up_questions": [
     {
       "question": "How many support agents will use this? What's their technical skill level?",
+      "dimension": "WHO",
       "why_needed": "Affects UX complexity and training requirements"
     }
   ],
@@ -344,14 +356,15 @@ If another round is needed:
 
 ## Success Criteria
 
+- [ ] Completion criteria loaded from intent definition (not hardcoded)
 - [ ] All user responses evaluated for completeness
+- [ ] Required dimensions checked against intent definition
 - [ ] Resolved understanding documented with sources
 - [ ] Assumptions explicitly stated
 - [ ] Unknowns acknowledged (not hidden)
-- [ ] Next intent identified with confidence score
-- [ ] Executive summary generated
 - [ ] Signals used documented with how they applied
-- [ ] Clear next steps provided
+- [ ] Status accurately reflects completeness
+- [ ] No routing decision made (orchestrator handles this)
 
 ---
 
@@ -359,21 +372,21 @@ If another round is needed:
 
 | Error | Action |
 |-------|--------|
-| STM path not found | Fail with "Cannot synthesize without STM context" |
+| STM path not found | Fail with "Cannot evaluate without STM context" |
 | No user responses in STM | Return `status: needs_reclarification` with original questions |
-| Intent detection fails | Default to `consult` intent with low confidence |
-| Contradictions unresolvable | Surface to user, pause synthesis |
+| Intent definition not found | Use default dimensions (WHAT, WHO, WHY, CONSTRAINTS) |
+| Contradictions unresolvable | Return `status: contradiction_detected`, pause |
 
 ---
 
 ## Integration Notes
 
-### Updating STM After Synthesis
+### Updating STM After Evaluation
 
-Write synthesis output to STM:
+Write evaluation output to STM:
 
 ```
-{stm_path}/outputs/synthesis-{timestamp}.json
+{stm_path}/outputs/evaluation-{timestamp}.json
 ```
 
 Update `{stm_path}/state.md`:
@@ -381,30 +394,30 @@ Update `{stm_path}/state.md`:
 ```markdown
 | Timestamp | Step | Status | Notes |
 |-----------|------|--------|-------|
-| {ts} | Synthesis | complete | Clarified, routing to design intent |
+| {ts} | Evaluation | complete | Clarified, completeness: 0.85 |
 ```
 
-Update `{stm_path}/intents.md`:
+### Orchestrator Uses Evaluation for Routing
 
-```markdown
-## Intent Resolution [{timestamp}]
+The orchestrator agent receives evaluation output and determines next action inline:
 
-**Original**: clarify (confidence: 1.0)
-**Resolved to**: design (confidence: 0.9)
-**Reason**: User provided clear requirements for AI support assistant
-**Next agent**: phoenix:architect
 ```
+If status == "clarified":
+  → Apply intent detection patterns from intent definition
+  → Route to appropriate next intent
 
-### Handing Off to Next Intent
+If status == "needs_reclarification":
+  → Re-invoke generate-questions with follow_up_questions
 
-The orchestrator receives the synthesis output and:
+If status == "proceed_with_assumptions":
+  → Route forward with documented assumptions
 
-1. Reads `next_intent` from synthesis
-2. Updates routing plan
-3. Invokes appropriate agent with:
-   - `resolved_understanding` as context
-   - `signals_used` for continued grounding
-   - `assumptions` for the agent to validate or challenge
+If status == "contradiction_detected":
+  → Present contradiction to user for resolution
+
+If status == "scope_changed":
+  → Re-run full orchestration from Step 1
+```
 
 ---
 
@@ -435,5 +448,6 @@ These assumptions may need revisiting if they prove incorrect.
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-01-05
+**Version**: 2.0.0
+**Last Updated**: 2026-01-06
+**Changes**: Renamed from `consult-synthesize-response` to `phoenix-cognition-evaluate-understanding`. Updated to PCAM namespace. Added `intent` and `intent_definition_path` inputs. Completion criteria now come from intent definition (not hardcoded). REMOVED `next_intent` output - routing stays inline in orchestrator agent.

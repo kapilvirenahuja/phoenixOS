@@ -1,17 +1,21 @@
 ---
-name: consult-analyze-request
-description: Analyze incoming request for complexity, vagueness, and missing context. First skill in the clarify chain - provides structured analysis that feeds into question generation.
+name: phoenix-perception-analyze-request
+description: Analyze incoming request for complexity, vagueness, and missing context. Perception domain skill that provides structured analysis for any intent requiring request understanding.
 ---
 
 # Analyze Request
 
-Classify the complexity of a request and detect vagueness, buzzwords, and missing context. This is the **perception** phase - understanding what we're dealing with before generating questions.
+Classify the complexity of a request and detect vagueness, buzzwords, and missing context. This is a **Perception** domain skill - understanding what we're dealing with before taking action.
 
 ## When to Use
 
-- **Before**: `consult:clarify-requirements` (this skill's output feeds into question generation)
-- **Trigger**: Agent receives a query that may need clarification
-- **By**: `phoenix:strategy-guardian` agent (or any agent handling clarify/consult intents)
+- **Before**: Any skill that needs request analysis (e.g., `phoenix-manifestation-generate-questions`)
+- **Trigger**: Agent receives a query that may need clarification or analysis
+- **By**: Any agent handling clarify/consult/decide/validate intents
+
+## PCAM Domain
+
+**Perception** - Understanding inputs, extracting meaning, classifying content.
 
 ## Position in Chain
 
@@ -20,22 +24,25 @@ Query arrives
       │
       ▼
 ┌─────────────────────────────────┐
-│  consult:analyze-request        │  ◄── YOU ARE HERE
+│  phoenix-perception-            │  ◄── YOU ARE HERE
+│  analyze-request                │
 │  (Perception: What are we       │
 │   dealing with?)                │
 └─────────────────────────────────┘
       │
       ▼ analysis
 ┌─────────────────────────────────┐
-│  consult:clarify-requirements   │
+│  phoenix-manifestation-         │
+│  generate-questions             │
 │  (Generation: What questions    │
 │   should we ask?)               │
 └─────────────────────────────────┘
       │
       ▼ questions → user responds
 ┌─────────────────────────────────┐
-│  consult:synthesize-response    │
-│  (Synthesis: Wrap up and route) │
+│  phoenix-cognition-             │
+│  evaluate-understanding         │
+│  (Evaluation: Is it complete?)  │
 └─────────────────────────────────┘
 ```
 
@@ -197,7 +204,7 @@ No signal found for: WHO (users/customers)
 
 **If no relevant signal exists in STM:**
 - Mark as "No signal found"
-- The clarify-requirements skill will use logical reasoning instead
+- Downstream skills will use logical reasoning instead
 
 ---
 
@@ -308,19 +315,19 @@ Based on analysis, recommend next action:
 
 ## Integration Notes
 
-### Passing to clarify-requirements
+### Passing to phoenix-manifestation-generate-questions
 
-The output of this skill becomes the primary input for `consult:clarify-requirements`:
+The output of this skill becomes the primary input for question generation:
 
 ```
 analyze-request output
         │
         ▼
 ┌───────────────────────────────────────────────────────────┐
-│ clarify-requirements receives:                            │
+│ generate-questions receives:                               │
 │                                                           │
 │ - buzzwords_detected → Generate signal-grounded questions │
-│ - missing_dimensions → Generate 5W1H questions            │
+│ - missing_dimensions → Generate dimension questions       │
 │ - signal_mapping → Cite sources in questions              │
 │ - complexity → Determine how many questions to ask        │
 └───────────────────────────────────────────────────────────┘
@@ -336,5 +343,6 @@ After analysis, optionally write analysis to STM for audit:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-01-05
+**Version**: 2.0.0
+**Last Updated**: 2026-01-06
+**Changes**: Renamed from `consult-analyze-request` to `phoenix-perception-analyze-request`. Updated to PCAM namespace. Clarified as reusable Perception skill.

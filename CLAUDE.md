@@ -219,7 +219,7 @@ phoenixOS/
 Update STM immediately after:
 - Routing plan is built (save to `outputs/`, update `state.md`)
 - Agent returns output (update `state.md`, `intents.md` if applicable)
-- User responds (invoke `phoenix-context-update-stm` skill)
+- User responds (invoke `phoenix-engine-stm-update` skill)
 - Status changes (blocked, needs_clarification, complete)
 
 ### Clarification Handling
@@ -232,7 +232,7 @@ When an agent returns `status: needs_clarification`:
    - **Why it matters** — what decision or direction this unblocks
    - **Examples** — concrete options or scenarios to help the user respond
 3. Update STM with the questions asked
-4. When user responds, invoke `phoenix-context-update-stm` before re-routing
+4. When user responds, invoke `phoenix-engine-stm-update` before re-routing
 
 ---
 
@@ -349,8 +349,8 @@ Before generating any output:
 **Agents MUST invoke their defined skill chains. Agents MUST NOT perform skill work directly.**
 
 This applies to:
-- `phoenix:orchestrator` — MUST invoke the 5-step orchestrator skill sequence
-- `phoenix:strategy-guardian` — MUST invoke the consult skill chain for clarify intent
+- `phoenix:orchestrator` — MUST invoke the 2-step orchestrator skill sequence
+- `phoenix:strategy-guardian` — MUST invoke the PCAM skill chain for clarify intent
 
 ### Why This Matters
 
@@ -383,21 +383,18 @@ If an agent output shows:
 
 ```
 # Orchestrator building routing plan:
-Skill("phoenix-orchestrator-pattern-match") → candidate_intents
-Skill("phoenix-orchestrator-boost-confidence") → scored_intents
-Skill("phoenix-orchestrator-select-intents") → selected_intents
-Skill("phoenix-orchestrator-match-agents") → agent_assignments
-Skill("phoenix-orchestrator-build-plan") → routing_plan
+Skill("phoenix-engine-identify-intents") → selected_intents
+Skill("phoenix-engine-build-plan") → routing_plan
 
 # Strategy-guardian handling clarify intent:
-Skill("consult-analyze-request") → analysis
-Skill("consult-clarify-requirements") → questions with citations
+Skill("phoenix-perception-analyze-request") → analysis
+Skill("phoenix-manifestation-generate-questions") → questions with citations
 [user responds]
-Skill("consult-synthesize-response") → synthesis with next_intent
+Skill("phoenix-cognition-evaluate-understanding") → synthesis (orchestrator determines routing inline)
 ```
 
 ---
 
-**Version**: 3.1.0
-**Last Updated**: 2026-01-05
-**Changes**: Added Section 2 - Procedural State Tracking via TodoWrite to prevent conversational pattern fallback during recipe execution
+**Version**: 3.2.0
+**Last Updated**: 2026-01-06
+**Changes**: Updated skill references to new PCAM namespace (phoenix-perception-*, phoenix-manifestation-*, phoenix-cognition-*, phoenix-engine-*)

@@ -1,0 +1,36 @@
+{
+  "question_blocks": [
+    {
+      "question": "What specific problem are you trying to solve?",
+      "signal_path": "@{user-vault}/signals/ai/augmentation-principle.md",
+      "why_it_matters": "AI should augment human capabilities, not be added for its own sake. Without a clear problem, you risk building AI-for-AI's-sake.",
+      "examples": [
+        "Reducing manual data entry time by 50%",
+        "Automating customer support for common queries",
+        "Predicting equipment failures before they happen"
+      ]
+    },
+    {
+      "question": "Who experiences this problem today, and what do they currently do instead?",
+      "signal_path": null,
+      "why_it_matters": "Understanding the current workflow reveals whether AI is the right solution or an over-engineered one.",
+      "examples": [
+        "Support agents manually categorizing tickets",
+        "Analysts spending 4 hours/week on reports",
+        "Customers waiting 24 hours for responses"
+      ]
+    },
+    {
+      "question": "Why do you believe AI is the right approach?",
+      "signal_path": "@{user-vault}/signals/ai/pcam-framework.md",
+      "why_it_matters": "Most 'AI features' are perception-only with no real agency. PCAM framework asks: What will this AI actually DO?",
+      "examples": [
+        "Pattern recognition at scale humans can't match",
+        "Real-time decisions faster than human reaction",
+        "Learning from data to improve over time"
+      ]
+    }
+  ],
+  "signal_coverage": 2,
+  "status": "needs_clarification"
+}

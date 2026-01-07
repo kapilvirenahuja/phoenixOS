@@ -4,7 +4,7 @@
 
 ## Overview
 
-The **orchestration engine** is the system that identifies user intents and routes them to appropriate domain agents. It operates via the `phoenix:orchestrator` agent and its 5-skill sequence.
+The **orchestration engine** is the system that identifies user intents and routes them to appropriate domain agents. It operates via the `phoenix:orchestrator` agent and its 2-skill sequence.
 
 ## How It Works
 
@@ -13,49 +13,29 @@ User Query + Context
         │
         ▼
 ┌─────────────────────────────────────────────────────┐
-│  1. Pattern Match                                   │
-│     Match query against intent patterns from LTM    │
-│     Output: candidate_intents with initial scores   │
-└─────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────┐
-│  2. Boost Confidence                                │
-│     Apply context signals to refine scores          │
-│     Output: scored_intents with signal breakdown    │
-└─────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────┐
-│  3. Select Intents                                  │
-│     Apply thresholds, resolve dependencies          │
+│  1. Identify Intents                                │
+│     - Pattern match against intent definitions      │
+│     - Boost confidence with context signals         │
+│     - Apply thresholds, resolve dependencies        │
 │     Output: selected_intents (max 4)                │
 └─────────────────────────────────────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────────────────────┐
-│  4. Match Agents                                    │
-│     Map intents to available agents                 │
-│     Output: agent_assignments with context          │
-└─────────────────────────────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────────────────────────────┐
-│  5. Build Plan                                      │
-│     Construct sequenced routing plan                │
+│  2. Build Plan                                      │
+│     - Map intents to available agents               │
+│     - Extract context enrichment                    │
+│     - Construct sequenced routing plan              │
 │     Output: routing_plan (JSON per schema)          │
 └─────────────────────────────────────────────────────┘
 ```
 
-## The 5-Skill Sequence
+## The 2-Skill Sequence
 
 | Step | Skill | Purpose |
 |------|-------|---------|
-| 1 | `phoenix-orchestrator-pattern-match` | Match query patterns against intent definitions |
-| 2 | `phoenix-orchestrator-boost-confidence` | Apply contextual signals to adjust scores |
-| 3 | `phoenix-orchestrator-select-intents` | Filter by threshold, resolve dependencies |
-| 4 | `phoenix-orchestrator-match-agents` | Map selected intents to domain agents |
-| 5 | `phoenix-orchestrator-build-plan` | Construct the execution plan |
+| 1 | `phoenix-engine-identify-intents` | Pattern match, boost confidence, select intents |
+| 2 | `phoenix-engine-build-plan` | Map to agents, construct routing plan |
 
 ## Intent Confidence Thresholds
 

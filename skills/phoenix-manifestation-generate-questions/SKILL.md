@@ -1,30 +1,36 @@
 ---
-name: consult-clarify-requirements
-description: Generate signal-grounded clarifying questions based on request analysis. Second skill in the clarify chain - transforms analysis into actionable questions that unblock progress.
+name: phoenix-manifestation-generate-questions
+description: Generate signal-grounded clarifying questions based on request analysis. Manifestation domain skill that produces questions derived from intent-defined shapes and STM signals.
 ---
 
-# Clarify Requirements
+# Generate Questions
 
-Generate focused, signal-grounded clarifying questions that resolve ambiguity and unblock progress. This is the **generation** phase - producing questions based on the analysis from `consult:analyze-request`.
+Generate focused, signal-grounded clarifying questions that resolve ambiguity and unblock progress. This is a **Manifestation** domain skill - producing outputs based on perception and cognition.
 
 ## When to Use
 
-- **After**: `consult:analyze-request` (requires analysis output as input)
-- **Before**: User response → `consult:synthesize-response`
+- **After**: `phoenix-perception-analyze-request` (requires analysis output as input)
+- **Before**: User response → `phoenix-cognition-evaluate-understanding`
 - **Trigger**: Analysis indicates `recommended_action: clarify` or `clarify_light`
-- **By**: `phoenix:strategy-guardian` agent
+- **By**: Any agent that needs to generate clarifying questions
+
+## PCAM Domain
+
+**Manifestation** - Producing artifacts, outputs, deliverables.
 
 ## Position in Chain
 
 ```
 ┌─────────────────────────────────┐
-│  consult:analyze-request        │
+│  phoenix-perception-            │
+│  analyze-request                │
 │  Output: analysis object        │
 └─────────────────────────────────┘
       │
       ▼ analysis
 ┌─────────────────────────────────┐
-│  consult:clarify-requirements   │  ◄── YOU ARE HERE
+│  phoenix-manifestation-         │  ◄── YOU ARE HERE
+│  generate-questions             │
 │  (Generation: What questions    │
 │   should we ask?)               │
 └─────────────────────────────────┘
@@ -37,7 +43,8 @@ Generate focused, signal-grounded clarifying questions that resolve ambiguity an
       │
       ▼ user_response
 ┌─────────────────────────────────┐
-│  consult:synthesize-response    │
+│  phoenix-cognition-             │
+│  evaluate-understanding         │
 │  (or re-analyze if still vague) │
 └─────────────────────────────────┘
 ```
@@ -48,55 +55,62 @@ Generate focused, signal-grounded clarifying questions that resolve ambiguity an
 
 | Input | Required | Description |
 |-------|----------|-------------|
-| `analysis` | Yes | Output from `consult:analyze-request` |
+| `analysis` | Yes | Output from `phoenix-perception-analyze-request` |
 | `stm_path` | Yes | Path to STM workspace (for context.md signals) |
-| `engine_intent_path` | Yes | Path to intent definition (for question shapes) |
-| `max_questions` | No | Maximum questions to generate (default: 4) |
 | `intent` | Yes | Current intent (`clarify`, `consult`, `decide`, etc.) |
+| `intent_definition_path` | Yes | Path to intent definition (e.g., `@memory/engine/intents/cto-intents.md`) |
+| `max_questions` | No | Maximum questions to generate (default: 4) |
 
 ---
 
 ## Instructions
 
-### Step 1: Read Engine Question Shapes
+### Step 1: Read Intent Definition for Question Shapes
 
-Load the question framing structure from the intent definition:
+Load the question framing structure from the intent definition file at `intent_definition_path`.
 
-**For `clarify` intent** (from `@memory/engine/intents/cto-intents.md`):
+**Locate the Framing Structure section for the current intent:**
 
 ```markdown
-Question shapes:
+### Framing Structure
+
+**Goal**: [Intent-specific goal]
+
+**Question shapes** (used to gather information):
 - "What specifically...?" — narrow scope
 - "Who/what/when/where...?" — fill gaps
 - "What does [term] mean to you?" — define terms
 - "What would success look like?" — clarify outcomes
+
+**Input complete when**: [Completion criteria]
 ```
 
-**For `consult` intent**:
+**Store the shapes for the current intent.**
 
-```markdown
-Question shapes:
-- "What have you tried so far?" — understand current state
-- "What specifically is blocking you?" — pinpoint the issue
-- "What constraints are you working within?" — understand boundaries
-- "What would 'solved' look like?" — clarify desired outcome
-```
+**Example shapes by intent:**
 
-**For `decide` intent**:
-
-```markdown
-Question shapes:
-- "What criteria matter most for this decision?" — establish framework
-- "What are the constraints?" — understand boundaries
-- "What happens if you choose wrong?" — assess reversibility
-- "Who else is affected by this decision?" — identify stakeholders
-```
-
-Store the shapes for the current intent.
+| Intent | Question Shapes |
+|--------|-----------------|
+| `clarify` | "What specifically...?", "Who/what/when/where...?", "What does [term] mean to you?", "What would success look like?" |
+| `consult` | "What have you tried so far?", "What specifically is blocking you?", "What constraints are you working within?", "What would 'solved' look like?" |
+| `decide` | "What criteria matter most?", "What are the constraints?", "What happens if you choose wrong?", "Who else is affected?" |
+| `validate` | "What assumptions are you making?", "What could cause this to fail?", "What are you NOT doing?", "What's your fallback?" |
 
 ---
 
-### Step 2: Read STM Signals
+### Step 2: Read Required Dimensions from Intent Definition
+
+Load the completion criteria to understand which dimensions MUST be covered:
+
+```markdown
+**Input complete when**: User provides concrete specifics for WHAT, WHO, WHY, and CONSTRAINTS
+```
+
+Extract required dimensions: `[WHAT, WHO, WHY, CONSTRAINTS]`
+
+---
+
+### Step 3: Read STM Signals
 
 Load signals from `{stm_path}/context.md`:
 
@@ -110,11 +124,11 @@ Build a signal lookup that can be queried by topic/keyword.
 
 ---
 
-### Step 3: Group by Signal Lens (Signal-First Format)
+### Step 4: Group by Signal Lens (Signal-First Format)
 
 Instead of generating individual questions, group questions by the **signal** that grounds them. This teaches the user the mental model while gathering information.
 
-**3a: Identify unique signals from analysis**
+**4a: Identify unique signals from analysis**
 
 ```
 From analysis.signal_mapping, extract unique signals:
@@ -123,12 +137,12 @@ From analysis.signal_mapping, extract unique signals:
   - build-vs-buy.md → covers: HOW/CONSTRAINTS dimension
 ```
 
-**3b: For each signal, build a question block**
+**4b: For each signal, build a question block**
 
 A question block contains:
 1. **Signal reference** — path to the signal
 2. **Core insight** — the key message from the signal (1-2 sentences)
-3. **Questions** — multiple questions derived from this signal's framework
+3. **Questions** — multiple questions derived from this signal's framework, using shapes from Step 1
 4. **Examples** — concrete options for each question
 
 ```json
@@ -162,7 +176,7 @@ A question block contains:
 }
 ```
 
-**3c: Create block for questions without signal grounding**
+**4c: Create block for questions without signal grounding**
 
 For dimensions with no relevant signal in STM:
 
@@ -189,11 +203,9 @@ For dimensions with no relevant signal in STM:
 
 ---
 
-### Step 4: Ensure Required Dimensions Coverage
+### Step 5: Ensure Required Dimensions Coverage
 
-The clarify intent requires: **WHAT, WHO, WHY, CONSTRAINTS**
-
-Check that all required dimensions are covered across question blocks:
+Check that all required dimensions (from Step 2) are covered across question blocks:
 
 | Dimension | Required | Covered By |
 |-----------|----------|------------|
@@ -210,7 +222,7 @@ Check that all required dimensions are covered across question blocks:
 
 ---
 
-### Step 5: Order Question Blocks
+### Step 6: Order Question Blocks
 
 Order blocks by signal relevance:
 
@@ -222,7 +234,7 @@ Within each block, questions are already ordered by the signal's logical flow.
 
 ---
 
-### Step 6: Format Output (Signal-First Presentation)
+### Step 7: Format Output (Signal-First Presentation)
 
 Structure for user presentation:
 
@@ -264,12 +276,6 @@ Most "AI features" are perception-only with no real agency.
    - A platform/API (e.g., AI service for other apps)
    - An agentic system (e.g., autonomous workflow)
 
-4. **Which PCAM dimension is primary?**
-   - Perception (understanding inputs, context)
-   - Cognition (reasoning, deciding, planning)
-   - Agency (taking actions, using tools)
-   - Manifestation (producing artifacts, outputs)
-
 ---
 
 ## Context Needed
@@ -277,13 +283,13 @@ Most "AI features" are perception-only with no real agency.
 
 **Questions**:
 
-5. **Who are the users or customers?**
+4. **Who are the users or customers?**
    - Internal team (developers, ops, support)
    - Business customers (enterprise, SMB)
    - Consumers (end users)
    - Developers (API consumers)
 
-6. **What constraints exist?**
+5. **What constraints exist?**
    - Timeline (MVP in weeks vs production in months)
    - Budget ($0 free tier vs $50K/month inference)
    - Team (solo dev vs ML engineers)
@@ -344,12 +350,6 @@ Most "AI features" are perception-only with no real agency.
           "question": "What type of thing are you building?",
           "dimension": "WHAT",
           "examples": ["Product feature", "Standalone tool", "Platform/API", "Agentic system"]
-        },
-        {
-          "id": "q4",
-          "question": "Which PCAM dimension is primary?",
-          "dimension": "WHAT",
-          "examples": ["Perception", "Cognition", "Agency", "Manifestation"]
         }
       ]
     },
@@ -360,13 +360,13 @@ Most "AI features" are perception-only with no real agency.
       "core_insight": "Context needed — using logical reasoning",
       "questions": [
         {
-          "id": "q5",
+          "id": "q4",
           "question": "Who are the users or customers?",
           "dimension": "WHO",
           "examples": ["Internal team", "Business customers", "Consumers", "Developers"]
         },
         {
-          "id": "q6",
+          "id": "q5",
           "question": "What constraints exist?",
           "dimension": "CONSTRAINTS",
           "examples": ["Timeline", "Budget", "Team", "Data"]
@@ -374,8 +374,8 @@ Most "AI features" are perception-only with no real agency.
       ]
     }
   ],
-  "total_questions": 6,
-  "signal_coverage": 0.67,
+  "total_questions": 5,
+  "signal_coverage": 0.6,
   "dimensions_covered": {
     "WHAT": true,
     "WHO": true,
@@ -414,7 +414,9 @@ Before finalizing each question, verify:
 
 ## Success Criteria
 
-- [ ] All required dimensions covered (WHAT, WHO, WHY, CONSTRAINTS)
+- [ ] Question shapes loaded from intent definition (not hardcoded)
+- [ ] Required dimensions loaded from intent definition
+- [ ] All required dimensions covered (per intent definition)
 - [ ] Questions grouped by signal lens (not individual citations)
 - [ ] Each signal block has: path, core insight, derived questions
 - [ ] Context block exists for questions without signal grounding
@@ -430,101 +432,43 @@ Before finalizing each question, verify:
 |-------|--------|
 | No analysis provided | Fail with "Requires analyze-request output" |
 | STM path not found | Generate questions without signal grounding |
+| Intent definition not found | Use default question shapes |
 | No buzzwords AND no missing dimensions | Return `status: proceed` (nothing to clarify) |
-| Engine intent path not found | Use default question shapes |
 
 ---
 
 ## Integration Notes
 
-### Receiving from analyze-request
+### Receiving from phoenix-perception-analyze-request
 
 ```python
 # Pseudo-code
-analysis = consult_analyze_request(query, stm_path, intent)
+analysis = phoenix_perception_analyze_request(query, stm_path, intent)
 
 if analysis.recommended_action in ["clarify", "clarify_light"]:
-    questions = consult_clarify_requirements(
+    questions = phoenix_manifestation_generate_questions(
         analysis=analysis,
         stm_path=stm_path,
-        engine_intent_path="@memory/engine/intents/cto-intents.md",
-        max_questions=4,
-        intent=intent
+        intent=intent,
+        intent_definition_path="@memory/engine/intents/cto-intents.md",
+        max_questions=4
     )
 ```
 
 ### Passing to Agent for Presentation
 
-The agent receives `question_blocks` and formats using the **signal-first** presentation:
-
-```markdown
-## From: AI Augmentation Principle
-**Source**: @{user-vault}/signals/ai/augmentation-principle.md
-**Radar**: AI / Intelligence
-
-AI should augment human capabilities, not replace judgment.
-Success = humans become more effective, not obsolete.
-
-**Questions**:
-
-1. **What human capability should AI augment?**
-   - Research speed (help find answers faster)
-   - Attention/review (help catch errors)
-   - Pattern recognition (help spot trends)
-   - Creative throughput (help produce drafts)
-
-2. **What does success look like?**
-   - Reduce task time from X to Y
-   - Enable non-experts to do Z
-   - Catch N% of issues before production
-
----
-
-## From: PCAM Framework
-**Source**: @{user-vault}/signals/ai/pcam-framework.md
-**Radar**: AI / Intelligence
-
-Four dimensions define AI systems: Perception, Cognition, Agency, Manifestation.
-Most "AI features" are perception-only with no real agency.
-
-**Questions**:
-
-3. **What type of thing are you building?**
-   - A product feature (e.g., AI-powered search)
-   - A standalone tool (e.g., internal assistant)
-   - A platform/API (e.g., AI service for other apps)
-   - An agentic system (e.g., autonomous workflow)
-
----
-
-## Context Needed
-**Source**: No signal found — using logical reasoning
-
-**Questions**:
-
-4. **Who are the users or customers?**
-   - Internal team (developers, ops, support)
-   - Business customers (enterprise, SMB)
-   - Consumers (end users)
-   - Developers (API consumers)
-
-5. **What constraints exist?**
-   - Timeline (MVP in weeks vs production in months)
-   - Budget ($0 free tier vs $50K/month inference)
-   - Team (solo dev vs ML engineers)
-   - Data (public only vs proprietary)
-```
+The agent receives `question_blocks` and formats using the **signal-first** presentation template (see Step 7).
 
 ### After User Response
 
 User response flows to:
-1. `phoenix-context-update-stm` (update STM with response)
+1. `phoenix-engine-stm-update` (update STM with response)
 2. Either:
-   - `consult:analyze-request` again (if response still vague)
-   - `consult:synthesize-response` (if clarified enough to proceed)
+   - `phoenix-perception-analyze-request` again (if response still vague)
+   - `phoenix-cognition-evaluate-understanding` (if clarified enough to proceed)
 
 ---
 
 **Version**: 2.0.0
-**Last Updated**: 2026-01-05
-**Changes**: Switched to signal-first format — questions grouped by signal lens, not individual citations. Ensures all required dimensions (WHAT, WHO, WHY, CONSTRAINTS) are covered.
+**Last Updated**: 2026-01-06
+**Changes**: Renamed from `consult-clarify-requirements` to `phoenix-manifestation-generate-questions`. Updated to PCAM namespace. Added `intent` and `intent_definition_path` inputs. Question shapes and required dimensions now come from intent definition (not hardcoded).
