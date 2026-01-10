@@ -1,6 +1,8 @@
-# Intent Taxonomy
+# Intents
 
-> Foundational framework for understanding and working with intents
+> What the user wants to accomplish
+
+---
 
 ## What is an Intent?
 
@@ -194,5 +196,27 @@ When multiple intents are detected:
 
 ---
 
-**Version**: 2.0.0
-**Last Updated**: 2026-01-05
+## Confidence Thresholds
+
+| Confidence | Action |
+|------------|--------|
+| >= 0.8 | Execute intent |
+| 0.5 - 0.8 | Confirm with user |
+| < 0.5 | Trigger clarify first |
+
+**Rule**: Never execute with low confidence.
+
+---
+
+## Related
+
+-> [Agent Architecture](agent-architecture.md) — What handles intents
+-> [Skills](skills.md) — What serves intents
+-> [Orchestration](orchestration.md) — How intents are detected
+-> [Recipes](recipes.md) — What binds intents to agents
+-> [Memory](memory.md) — Where intent patterns are stored
+
+---
+
+**Version**: 2.1.0
+**Last Updated**: 2026-01-10
