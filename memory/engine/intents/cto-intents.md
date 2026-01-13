@@ -134,21 +134,34 @@ Output is complete when:
 
 ### Routing
 
-After output is delivered, present routing options to user:
+After output is delivered, present routing options **based on active intent bindings from the recipe**.
+
+**⚠️ CRITICAL: Do NOT hardcode routing options. Options must be derived from recipe bindings.**
 
 ```
 ### What's Next?
 
-- **[Design]** — Get technical architecture guidance
+For each intent in recipe.intent_bindings where status == "active":
+  - **[{intent}]** — {intent.description from this file}
+
+Always include:
+  - **[Done]** — I have what I need
+```
+
+**Example** (if only `clarify` and `validate` are active):
+```
+### What's Next?
+
 - **[Validate]** — Stress-test this approach
-- **[Decide]** — Help choose between specific options
 - **[Done]** — I have what I need
 ```
 
 **Routing rules**:
 - User selects next intent (no auto-routing)
 - If user selects [Done], conversation ends with deliverable
-- Future: Auto-route based on learned user preferences
+- **⛔ Do NOT present intents that are not in recipe.intent_bindings**
+- **⛔ Do NOT present intents where status != "active"**
+- If user requests an unavailable intent, inform them and list available options
 
 ### Related Intents
 - **evolves_to**: `design`, `validate`, `decide`, `consult`, or `advise` (user choice)
@@ -394,6 +407,6 @@ When multiple intents could match, use this priority:
 
 ---
 
-**Version**: 4.0.0
-**Last Updated**: 2026-01-05
-**Changes**: Added Output Schema to `clarify` intent - intents now define concrete deliverables, not just success criteria
+**Version**: 4.1.0
+**Last Updated**: 2026-01-13
+**Changes**: Fixed clarify routing section - options now derived from recipe bindings, not hardcoded. Added explicit warnings against presenting unavailable intents.

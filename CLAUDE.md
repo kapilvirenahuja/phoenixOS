@@ -91,6 +91,64 @@ Reference: `@memory/engine/flows/recipe-orchestration-pattern.md`
 
 ---
 
+### 1a. Intent Execution Gate (MANDATORY)
+
+**Before executing ANY intent (including user-selected intents from routing options), you MUST verify availability.**
+
+#### Pre-Execution Checklist
+
+Before executing an intent:
+
+1. **Read recipe's `intent_bindings` table** (in the recipe file or loaded recipe config)
+2. **Check: Is the intent listed?** If NO → blocked
+3. **Check: Is the intent status "active"?** If NO → blocked
+4. **If blocked** → Return blocked status, do NOT execute
+
+#### Blocking Response Format
+
+When an intent is unavailable:
+
+```markdown
+**Status**: blocked
+**Reason**: Intent `{intent_name}` is not available in this recipe.
+
+**Available intents**:
+{For each binding where status == "active":}
+- `{intent}` — {description}
+
+**Planned intents** (not yet active):
+{For each binding where status == "planned":}
+- `{intent}`
+
+Would you like to proceed with one of the available intents?
+```
+
+#### What This Gate Prevents
+
+| Scenario | Without Gate | With Gate |
+|----------|--------------|-----------|
+| User selects unavailable intent | Execute anyway (wrong) | Block and inform |
+| Intent exists in domain but not bound | Execute anyway (wrong) | Block and inform |
+| Intent bound but status = "planned" | Execute anyway (wrong) | Block and inform |
+
+#### User Requests Do NOT Override
+
+**This is critical.** Even if:
+- User explicitly requests the intent
+- The intent exists in the domain file (e.g., `cto-intents.md`)
+- You "know how" to execute it from training
+
+...you MUST check bindings first. **Recipe bindings are the source of truth for availability, not intent definitions.**
+
+#### Why This Matters
+
+- **Recipe controls scope** — Not all intents are appropriate for all recipes
+- **Phased rollout** — Intents can be planned but not active yet
+- **Prevents ungrounded execution** — Executing unbound intents bypasses the skill chain and signal grounding
+- **Auditability** — Only bound intents have defined agent assignments and outputs
+
+---
+
 ### 2. Procedural State Tracking via TodoWrite (MANDATORY)
 
 **Problem**: Instructions alone don't survive context switches. Without external state, execution defaults to conversational patterns (do something → report back).
@@ -395,6 +453,6 @@ Skill("phoenix-cognition-evaluate-understanding") → synthesis (orchestrator de
 
 ---
 
-**Version**: 3.2.0
-**Last Updated**: 2026-01-06
-**Changes**: Updated skill references to new PCAM namespace (phoenix-perception-*, phoenix-manifestation-*, phoenix-cognition-*, phoenix-engine-*)
+**Version**: 3.3.0
+**Last Updated**: 2026-01-13
+**Changes**: Added Section 1a "Intent Execution Gate" - mandatory pre-execution check that verifies intent is in recipe bindings and status is "active" before execution. User requests do not override binding checks.
