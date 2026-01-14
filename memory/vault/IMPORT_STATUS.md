@@ -6,7 +6,7 @@
 
 ## Source Vault
 
-<!-- VAULT_ROOT: Your local path to the HowToArchitect Obsidian vault (e.g., Google Drive sync folder) -->
+<!-- VAULT_ROOT: Defined in .vault-config.local (gitignored) -->
 
 **Location**: `{VAULT_ROOT}/`
 

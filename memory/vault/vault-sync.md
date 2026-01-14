@@ -52,7 +52,7 @@
 
 > Key folders to read when refreshing the vault from HowToArchitect
 
-<!-- VAULT_ROOT: Your local path to the HowToArchitect Obsidian vault (e.g., Google Drive sync folder) -->
+<!-- VAULT_ROOT: Defined in .vault-config.local (gitignored) -->
 
 ### Radars Source
 
