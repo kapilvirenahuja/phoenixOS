@@ -1,2 +1,5 @@
 # Short-term memory (ephemeral session data)
 .phoenix-os/stm/
+
+# Long-term memory vault (user's private knowledge)
+{user-vault}/
