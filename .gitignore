@@ -1,5 +1,9 @@
 # Short-term memory (ephemeral session data)
 .phoenix-os/stm/
 
-# Long-term memory vault (user's private knowledge)
-{user-vault}/
+# Long-term memory vault (user's private knowledge - ignore contents, not directory)
+memory/vault/*
+
+# Exception: track vault sync metadata (no IP, just status)
+!memory/vault/vault-sync.md
+!memory/vault/IMPORT_STATUS.md
