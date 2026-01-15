@@ -8,9 +8,9 @@
 
 | Metric | Value |
 |--------|-------|
-| **Last Sync** | 2026-01-13 |
+| **Last Sync** | 2026-01-14 |
 | **Total Radars** | 7 |
-| **Total Signals** | 92 |
+| **Total Signals** | 158 |
 | **Primary Source** | HowToArchitect Vault |
 
 ---
@@ -19,6 +19,7 @@
 
 | Date | Source | Action | Signals Added | Notes |
 |------|--------|--------|---------------|-------|
+| 2026-01-14 | Inception/Frames | Full audit sync | +6 | AI (3): ai-roles-maturity, ai-native-sdlc-maturity, phoenix-autonomy-ladder; Leadership (3): five-skills-to-unlearn, specifier-designer-builder, ai-leadership-maturity |
 | 2026-01-13 | Readwise Articles | Radar expansion | +17 | Technology (6), Leadership (4), AI (4), Experience (3) from Readwise articles |
 | 2026-01-13 | HowToArchitect Vault | Enhancement batch | +13 | Leadership (4), Architecture (3), AI (3), Experience (2), Innovation (2), enrichments (Blue Ocean, Storyscaping, Clean Architecture) |
 | 2026-01-11 | HowToArchitect Vault | Bulk import | +31 | Batch 1-8: Radar keywords, AI/Architecture/Leadership/Innovation signals, Readwise books |
@@ -30,12 +31,12 @@
 
 | Category | Count | Last Updated |
 |----------|-------|--------------|
-| `signals/ai/` | 36 | 2026-01-13 |
-| `signals/architecture/` | 16 | 2026-01-13 |
-| `signals/leadership/` | 20 | 2026-01-13 |
-| `signals/innovation/` | 5 | 2026-01-13 |
-| `signals/experience/` | 8 | 2026-01-13 |
-| `signals/technology/` | 7 | 2026-01-13 |
+| `signals/ai/` | 51 | 2026-01-14 |
+| `signals/leadership/` | 47 | 2026-01-14 |
+| `signals/architecture/` | 31 | 2026-01-14 |
+| `signals/innovation/` | 12 | 2026-01-14 |
+| `signals/experience/` | 9 | 2026-01-14 |
+| `signals/technology/` | 8 | 2026-01-14 |
 
 ---
 
@@ -43,8 +44,11 @@
 
 | Source | Item | Priority | Notes |
 |--------|------|----------|-------|
-| HowToArchitect/Readwise | Remaining articles (~200) | Low | Filter for strategic relevance first |
-| HowToArchitect/Readwise | Podcast highlights | Medium | Actionable insights |
+| HowToArchitect/Readwise | Remaining articles (~500) | Low | Most already covered or low strategic value |
+| HowToArchitect/Readwise | Podcast highlights (16) | Low | Tactical content, already well-represented |
+| HowToArchitect/Inception | Organizing Ideas (11) | Low | Mostly WIP project documents |
+
+**Full Audit Complete (2026-01-14)**: Source vault (773 files) audited. High-value content extracted. Remaining items are either already covered, WIP, or low strategic priority.
 
 ---
 
@@ -110,5 +114,6 @@ radar: "[[0004 - Artificial Intelligence]]"
 
 ---
 
-**Version**: 1.1.0
-**Last Updated**: 2026-01-13
+**Version**: 1.2.0
+**Last Updated**: 2026-01-14
+**Changes**: Full audit sync complete. Added 6 signals from Inception/Frames. Total signals: 158.
