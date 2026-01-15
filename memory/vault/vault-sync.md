@@ -8,9 +8,9 @@
 
 | Metric | Value |
 |--------|-------|
-| **Last Sync** | 2026-01-14 |
+| **Last Sync** | 2026-01-15 |
 | **Total Radars** | 7 |
-| **Total Signals** | 158 |
+| **Total Signals** | 173 |
 | **Primary Source** | HowToArchitect Vault |
 
 ---
@@ -19,6 +19,7 @@
 
 | Date | Source | Action | Signals Added | Notes |
 |------|--------|--------|---------------|-------|
+| 2026-01-15 | Inception/Frames + Organizing Ideas + Readwise | Full v2 sync | +15 | AI (4): context-engineering-production, enterprise-ai-reality, sdlc-transformation-narrative, agent-architecture-comprehensive; Architecture (3): phoenixos-architecture, phoenixos-philosophy, architecture-thinking-art; Leadership (5): hands-on-cto-series, engineering-shift, architect-roles-decoded, product-thinking-synthesis; Experience (3): agentic-cx-patterns, dxp-composability-challenges, storytelling-dxp-framework; Innovation (1): strategic-bets-2026 |
 | 2026-01-14 | Inception/Frames | Full audit sync | +6 | AI (3): ai-roles-maturity, ai-native-sdlc-maturity, phoenix-autonomy-ladder; Leadership (3): five-skills-to-unlearn, specifier-designer-builder, ai-leadership-maturity |
 | 2026-01-13 | Readwise Articles | Radar expansion | +17 | Technology (6), Leadership (4), AI (4), Experience (3) from Readwise articles |
 | 2026-01-13 | HowToArchitect Vault | Enhancement batch | +13 | Leadership (4), Architecture (3), AI (3), Experience (2), Innovation (2), enrichments (Blue Ocean, Storyscaping, Clean Architecture) |
@@ -31,12 +32,12 @@
 
 | Category | Count | Last Updated |
 |----------|-------|--------------|
-| `signals/ai/` | 51 | 2026-01-14 |
-| `signals/leadership/` | 47 | 2026-01-14 |
-| `signals/architecture/` | 31 | 2026-01-14 |
-| `signals/innovation/` | 12 | 2026-01-14 |
-| `signals/experience/` | 9 | 2026-01-14 |
-| `signals/technology/` | 8 | 2026-01-14 |
+| `signals/ai/` | 55 | 2026-01-15 |
+| `signals/leadership/` | 51 | 2026-01-15 |
+| `signals/architecture/` | 34 | 2026-01-15 |
+| `signals/innovation/` | 13 | 2026-01-15 |
+| `signals/experience/` | 12 | 2026-01-15 |
+| `signals/technology/` | 8 | 2026-01-15 |
 
 ---
 
@@ -114,6 +115,6 @@ radar: "[[0004 - Artificial Intelligence]]"
 
 ---
 
-**Version**: 1.2.0
-**Last Updated**: 2026-01-14
-**Changes**: Full audit sync complete. Added 6 signals from Inception/Frames. Total signals: 158.
+**Version**: 1.4.0
+**Last Updated**: 2026-01-15
+**Changes**: v2 full sync complete. Added 15 signals from Inception/Frames (Phase 1), Organizing Ideas (Phase 2), and Readwise Articles/Podcasts (Phases 5-6). Books (Phase 3) had minimal highlights - content already covered by existing signals. Total signals: 173.
